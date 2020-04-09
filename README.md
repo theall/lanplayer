@@ -1,37 +1,22 @@
-# lanplayer
+##Lanplayer是什么
+基于QQ音乐播放器皮肤的网页版音乐播放器,通过everything的HTTP服务播放本机电脑中的MP3音乐.
 
-#### 介绍
-Web based music player.
+##安装过程
+---
 
-#### 软件架构
-软件架构说明
+1.下载安装[Everything1.4.X](https://www.voidtools.com/Everything-1.4.1.969.x86-Setup.exe)
 
+2.开启Everything的`HTTP`服务
 
-#### 安装教程
+3.下载源代码并解压到磁盘任意位置
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+4.打开浏览器输入[http://localhost](http://localhost), 访问Everything主页
 
-#### 使用说明
+5.输入'index.html'查找解压出的`index.html`文件
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+6.访问`index.html`链接打开播放器
 
 
-#### 码云特技
+##界面预览
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5.  码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+![界面](https://files.gitee.com/group1/M00/0D/34/wKgCNF6PCraAU37mAAEhbg_-mKU854.jpg?token=8cca90e5e824973a5fb6102105ec7040&ts=1586432700&attname=screenshot.jpg&disposition=attachment)
