@@ -1,0 +1,174 @@
+<html lang="zh-cn"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta http-equiv="Content-Language" content="zh-cn">
+    <meta name="keywords" content="音乐,QQ音乐,在线听歌,音乐下载,音乐播放器,音乐网站,MV,巅峰榜,音乐排行榜,翻译歌曲,热门歌曲,经典老歌,无损音乐,无损曲库">
+    <meta name="description" content="QQ音乐是腾讯公司推出的一款网络音乐服务产品，海量音乐在线试听、新歌热歌在线首发、歌词翻译、手机铃声下载、高品质无损音乐试听、海量无损曲库、正版音乐下载、空间背景音乐设置、MV观看等，是互联网音乐播放和下载的优选。">
+    <meta name="mobile-agent" content="format==[html5];url=">
+    <meta name="applicable-device" content="pc">
+    <title>MyPlayer</title>
+
+    <link rel="stylesheet" href="./css/player_0611.css">
+    <script src="./js/jquery.js"></script>
+
+<link rel="stylesheet" href="./css/popup_login.css"><style type="text/css">.emojicon-m {
+    min-height: 1em !important;
+    min-width: 1em !important;
+    max-height: 1em !important;
+    max-width: 1em !important;
+    vertical-align: middle !important;
+    float: none !important;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+    display: inline-block;
+}</style><link rel="stylesheet" type="text/css" href="./css/qb-ie-remind.css"></head>
+<body οndragstart="return false;" οncοntextmenu="return false;" onunload="document.cookie='yplayer_open=0;path=/;domain=localhost;'" class="os_mac" style="background-color: rgb(64, 32, 32);">
+<h1 class="player_logo"><a href="" onclick="setStatCookie&amp;&amp;setStatCookie();" rel="noopener" target="_blank"><img class="player_logo__pic" srcset="./images/player_logo@2x.png 2x" src="./images/player_logo.png" alt="QQ音乐"></a></h1>
+
+<div class="mod_player">
+    <div class="player__hd">
+        <div id="searchBar">
+            <form action="" method="get" target="_blank" id="search_songs">
+                <span class="ui-watermark-container ui-watermark-input">
+                    <label for="search-sug-input" class="ui-watermark-label" style="left: 15px; top: 3px; display: none;">输入歌曲、歌手、专辑名</label><input type="text" accesskey="s" size="24" class="sug-input" autocomplete="off" name="key" id="search-sug-input" data-log="'type':'click', 'page':'tingbox', 'pos':'top', 'sub':'search_box'">
+                </span>
+                <input type="submit" id="search-sug-submit" value="">
+            <div class="sug-result" style="display: none;"></div></form>
+        </div>
+    </div>
+    <div class="player__bd">
+        <!-- 默认 -->
+        <div class="player_style_normal js_box js_full_box" style="display:;">
+            <div class="mod_songlist_toolbar">
+                <a href="javascript:;" class="mod_btn js_all_like" data-stat="y_new.player.songlist.loveall"><i class="mod_btn_green__icon_like"></i>收藏<span class="mod_btn__border"></span></a>
+                <a href="javascript:;" class="mod_btn js_all_fav" data-stat="y_new.player.songlist.addall"><i class="mod_btn_green__icon_add"></i>添加到<span class="mod_btn__border"></span></a>
+                <a href="javascript:;" class="mod_btn js_all_down" data-stat="y_new.player.songlist.downloadall"><i class="mod_btn_green__icon_down"></i>下载<span class="mod_btn__border"></span></a>
+                <a href="javascript:;" class="mod_btn js_all_delete" data-stat="y_new.player.songlist.deleteall"><i class="mod_btn_green__icon_delete"></i>删除<span class="mod_btn__border"></span></a>
+				<a href="javascript:;" class="mod_btn js_all_deleted" data-stat="y_new.player.songlist.deleteallonce"><i class="mod_btn_green__icon_clear"></i>清空列表<span class="mod_btn__border"></span></a>
+            </div>
+            <div class="sb_scrollable sb_main sb_viewport">
+                
+                 <!-- 主要内容_S -->
+                <div class="sb_overview" style="height: 400px;">
+
+                    <!-- 编辑模式 mod_songlist--edit -->
+                    <div class="mod_songlist mod_songlist--edit">
+                        <i class="player_songlist__line"></i>
+                        <ul class="songlist__header">
+                            <li class="songlist__edit sprite">
+                                <input type="checkbox" class="songlist__checkbox js_check_all" data-stat="y_new.player.songlist.checkall">
+                            </li>
+                            <li class="songlist__header_name">歌曲</li>
+                            <li class="songlist__header_author">歌手</li>
+                            <li class="songlist__header_time">时长</li>
+                        </ul>
+                        <i class="player_songlist__line"></i>
+                        <ul class="songlist__list" id="song_box">
+                            <li>                 <div class="songlist__item songlist__item--playing">                 <div class="songlist__edit sprite">                     <input type="checkbox" class="songlist__checkbox">                 </div>                 <div class="songlist__number">5</div>                 <div class="songlist__songname">                     <span class="songlist__songname_txt" title="Beyond - River - Demo.mp3" src="/E%3A/%E9%9F%B3%E4%B9%90/beyond/Beyond%20-%20River%20-%20Demo.mp3">Beyond - River - Demo.mp3</span>                     <div class="mod_list_menu">                         <a href="javascript:;" class="list_menu__item list_menu__play js_play" title="暂停">                             <i class="list_menu__icon_pause"></i>                             <span class="icon_txt">暂停</span>                         </a>                         <a href="javascript:;" class="list_menu__item list_menu__add js_fav" title="添加到歌单">                             <i class="list_menu__icon_add"></i>                             <span class="icon_txt">添加到歌单</span>                         </a>                         <a href="javascript:;" class="list_menu__item list_menu__down js_down" title="下载">                             <i class="list_menu__icon_down"></i>                             <span class="icon_txt">下载</span>                         </a>                         <a href="javascript:;" class="list_menu__item list_menu__share js_share" title="分享">                             <i class="list_menu__icon_share"></i>                             <span class="icon_txt">分享</span>                         </a>                     </div>                 </div>                 <div class="songlist__artist" title="Bilge Theall">                     <a href="#" title="Bilge Theall" class="singer_name">Bilge Theall</a>                 </div>                 <div class="songlist__time">00:00</div>                 <div class="songlist__other">                 </div>                 <a href="javascript:;" class="songlist__delete js_delete" title="删除">                     <span class="icon_txt">删除</span></a>                     <i class="player_songlist__line"></i>                 </div>             </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 主要内容_E -->
+                <!-- 模拟滚动条 S -->
+                <div class="scroll_area sb vertical" style="display:none;">
+                    <div class="scroll_bg sb_bg"><div class="scroll_bg_cont sb_bg_cont"></div></div>
+                    <div class="scroll_bar sb_thumb" style="height:0px;">
+                        <div class="scroll_bar_cont sb_thumb_cont" style="height:0px;"></div>
+                    </div>
+                </div>
+                <!-- 模拟滚动条 E -->
+            </div>
+
+            <div class="mod_song_info" id="song_info">
+                <div class="song_info__info">
+                    <a href="javascirpt:;" class="song_info__cover js_album" data-stat="y_new.player.info_area.albumpic">
+                        <img src="https://y.gtimg.cn/music/photo_new/T002R300x300M000003j4htn0PB9Vc.jpg?max_age=2592000" id="song_pic" alt="" class="song_info__pic">
+                    </a>
+                    <div class="song_info__name" id="song_name">歌曲名：<a href="https://y.qq.com/n/yqq/song/000YpySX1TXRxp.html#stat=y_new.player.info_area.songname" onclick="setStatCookie&amp;&amp;setStatCookie();" title="Onimusha 3 Opening" target="_blank">Onimusha 3 Opening</a></div>
+                    <div class="song_info__singer" id="singer_name">歌手名：<a href="https://y.qq.com/n/yqq/singer/003qGSCv0IY18W.html#stat=y_new.player.info_area.singername" onclick="setStatCookie&amp;&amp;setStatCookie();" title="Bilge Theall" class="js_singer" data-stat="y_new.player.info_area.singername" data-singermid="003qGSCv0IY18W" rel="noopener nofollow" target="_blank">Bilge Theall</a></div>
+                    <div class="song_info__album" id="album_name">专辑名：<a href="https://y.qq.com/n/yqq/album/003j4htn0PB9Vc.html#stat=y_new.player.info_area.albumname" onclick="setStatCookie&amp;&amp;setStatCookie();" title="鬼武者3 オリジナル・サウンドトラック" target="_blank">鬼武者3 オリジナル・サウンドトラック</a></div>
+                </div>
+                <div class="song_info__lyric">
+                    <div class="song_info__lyric_box js_lyric_box">
+                        <!-- 控制song_info__lyric_inner来做滚动 -->
+                        <div class="song_info__lyric_inner qrc_ctn" id="qrc_ctn" data-mod="1"><p data-id="line_null">&nbsp;</p><p data-id="line_0" class="on">此歌曲为没有填词的纯音乐，请您欣赏</p></div>
+                    </div>
+                </div>
+				<a href="javascript:;" class="btn_lang btn_lang--select js_trans_btn" style="display:none;"><i class="icon_txt">开启音译歌词</i></a>
+            </div>
+        </div>
+
+        <!-- 纯净模式 -->
+        <div class="player_style_only js_box js_simp_box" style="display:none;">
+			<div class="mod_only_lyric js_lyric_box">
+				<!-- 控制only_lyric__inner来做滚动 -->
+				<div class="only_lyric__inner qrc_ctn" data-mod="2"><p data-id="line_null">&nbsp;</p><p data-id="line_0">此歌曲为没有填词的纯音乐，请您欣赏</p></div>
+			</div>
+			<a href="javascript:;" class="btn_lang btn_lang--select js_trans_btn" style="display:none;"><i class="icon_txt">开启音译歌词</i></a>
+        </div>
+    </div>
+    <div class="player__ft" id="opbanner">
+        <a href="javascript:;" class="btn_big_prev" title="alt+←"><span class="icon_txt">上一首</span></a>
+        <a href="javascript:;" class="btn_big_play" id="btnplay" title="[空格]"><span class="icon_txt">暂停</span></a>
+        <a href="javascript:;" class="btn_big_next" title="alt+→"><span class="icon_txt">下一首</span></a>
+        <div class="player_music">
+            <div class="player_music__info" id="sim_song_info"><a href="" onclick="setStatCookie&amp;&amp;setStatCookie();" title="Onimusha 3 Opening" class="js_song" data-stat="y_new.player.info_area.songname" data-mid="000YpySX1TXRxp" data-id="105873909" data-songtype="0" data-disstid="" rel="noopener nofollow" target="_blank">Onimusha 3 Opening</a> - <a href="https://y.qq.com/n/yqq/singer/003qGSCv0IY18W.html#stat=y_new.player.info_area.singername" onclick="setStatCookie&amp;&amp;setStatCookie();" title="Bilge Theall" class="js_singer" data-stat="y_new.player.info_area.singername" data-singermid="003qGSCv0IY18W" rel="noopener nofollow" target="_blank">Bilge Theall</a></div>
+            <div class="player_music__time" id="time_show">00:00 / 00:00</div>
+            <div class="player_progress" id="progress">
+                <div class="player_progress__inner" id="spanplayer_bgbar" title="[快进ctrl+alt+→][快退ctrl+alt+←]">
+                    <div class="player_progress__load" id="downloadbar" style="width: 77%;"></div>
+                    <div class="player_progress__play" style="width: 0%;" id="spanplaybar"><i class="player_progress__dot" id="spanprogress_op"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="txp_btn txp_btn_definition" id="btn_playback_rate">
+            <div class="txp_label">倍速</div>
+            <div class="txp_popup txp_popup_definition" style="display: none;">
+                <div class="txp_popup_content">
+                    <div class="txp_menuitem">0.5x</div>
+                    <div class="txp_menuitem">0.75x</div>
+                    <div class="txp_menuitem txp_current">1.0x</div>
+                    <div class="txp_menuitem">1.25x</div>
+                    <div class="txp_menuitem">1.5x</div>
+                    <div class="txp_menuitem">2.0x</div>
+                    <div class="txp_menuitem">4.0x</div>
+                </div>
+            </div>
+            <div class="txp_speed_tips txp_none">
+                <div class="txp_speed_tips_highlight">倍速播放</div> 在这里
+                <div class="txp_speed_tips_arrow" style="left: inherit;right: 50px;"></div>
+                <button class="txp_btn txp_btn_close" title=""></button>
+            </div>
+        </div>
+		<div>
+        <a href="javascript:;" class="btn_big_style_single" id="play_mod" title="单曲循环[O]"><span class="icon_txt">单曲循环[O]</span></a>
+		</div>
+        <a href="javascript:;" class="btn_big_like js_btn_fav" title="喜欢[V]"><span class="icon_txt">喜欢[V]</span></a>
+        <a href="javascript:;" class="btn_big_down js_btn_down" title="下载[D]"><span class="icon_txt">下载[D]</span></a>
+		<a class="mod_btn_comment js_into_comment btn_comment9" data-stat="y_new.player.gotocomment" href="https://y.qq.com/n/yqq/song/000YpySX1TXRxp.html#comment_box" style="" target="_blank"><span class="btn_comment__numbers"><i class="btn_comment__numb btn_comment__numb_2"></i></span><span class="icon_txt">评论</span></a>
+        <a href="javascript:;" class="btn_big_only" id="simp_btn" title="打开纯净模式[C]"><span class="icon_txt">打开纯净模式[C]</span></a>
+        <!-- <a href="javascript:;" class="btn_big_only btn_big_only--on"><span class="icon_txt">关闭纯净模式</span></a> -->
+        <div class="player_progress player_voice" id="voice">
+            <a href="javascript:;" class="btn_big_voice" id="spanmute" title="关闭声音[M]"><span class="icon_txt">关闭声音[M]</span></a>
+            <!-- <a href="javascript:;" class="btn_big_voice btn_big_voice--no"><span class="icon_txt">打开声音</span></a> -->
+            <div class="player_progress__inner" id="spanvolume" title="调节音量 [增大alt+↑][减小alt+↓]">
+                <div class="player_progress__play" style="width: 100%;" id="spanvolumebar"><i class="player_progress__dot" id="spanvolumeop"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="bg_player_mask"></div>
+
+<audio id="h5audio_media" height="0" width="0" src=""></audio>
+<script lang="text/javascirpt">
+$(function() {
+    $("*").on("dragstart", function(){
+        return false;
+    });
+});
+</script>
+<script src="./js/everything.js"></script>
+<script src="./js/player.js"></script>
+</body>
+</html>
