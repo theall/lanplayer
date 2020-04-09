@@ -1,7 +1,8 @@
-##Lanplayer是什么
+## Lanplayer是什么
+
 基于QQ音乐播放器皮肤的网页版音乐播放器,通过everything的HTTP服务播放本机电脑中的MP3音乐.
 
-##安装过程
+## 安装过程
 ---
 
 1.下载安装[Everything1.4.X](https://www.voidtools.com/Everything-1.4.1.969.x86-Setup.exe)
@@ -17,6 +18,6 @@
 6.访问`index.html`链接打开播放器
 
 
-##界面预览
+## 界面预览
 
 ![界面](https://files.gitee.com/group1/M00/0D/34/wKgCNF6PCraAU37mAAEhbg_-mKU854.jpg?token=8cca90e5e824973a5fb6102105ec7040&ts=1586432700&attname=screenshot.jpg&disposition=attachment)
