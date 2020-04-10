@@ -7,6 +7,7 @@ $(function(){
     var time_duration = $("#time_show");
     var current_play_index = 0;
     var current_playing_item = undefined;
+    var last_play_failed_item = undefined;
     var last_playing_item = undefined;
     var audio_playback_rate = 1;
     var btn_play = $("#btnplay");
@@ -18,6 +19,7 @@ $(function(){
     const PLAY_MODE_RECYCLE = 2;
     const PLAY_MODE_RANDOM = 3;
     var play_mode = PLAY_MODE_RECYCLE;
+    var debounce_timer = false;
     
     setIcon('favicon.ico');
     function setIcon(icon) {
@@ -36,6 +38,7 @@ $(function(){
         return (n < 10 ? "0" + n: n) + ":" + (e < 10 ? "0" + e: e)
     }
     
+    // 节流函数
     function throttle(func, delay) {
         var prev = Date.now();
         return function() {
@@ -48,6 +51,13 @@ $(function(){
             }
         }
     }
+    
+    // 防抖函数
+    debounce = function(callback, time) {
+        clearTimeout(debounce_timer);
+        debounce_timer = setTimeout(callback, time);
+    }
+    
     function loadAudio(index) {
         song_items = song_box.find("li>div");
         if(typeof(index) == "number") {
@@ -61,20 +71,61 @@ $(function(){
         if(current_playing_item == index || 
             (current_playing_item!=undefined && index!=undefined && current_playing_item[0]==index[0]))
             return;
+            
         title_scroll_index = 0;
         last_playing_item = current_playing_item;
         current_playing_item = index;
         audio_src = current_playing_item.find(".songlist__songname_txt").attr("src");
         audio_player.attr("src", audio_src);
         audio_player_el.playbackRate = audio_playback_rate;
-		
+        
+        // Toggle last playing song item
+        if(last_playing_item != undefined) {
+            last_playing_item.removeClass("songlist__item--playing");
+        }
+        
+        // Set current playing item icon
+        current_playing_item.addClass("songlist__item--playing");
+        current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
+    }
+    
+    function pauseAudio() {
+        audio_player_el.pause();
     }
     
     function playAudio() {
-		loadAudio(current_play_index);
-        audio_player_el.play();  
-		
+        loadAudio(current_play_index);
+        audio_player_el.play()
+        .then(function(e) {
+            // 播放成功,清除播放失败变量
+            last_play_failed_item = undefined;
+        }).catch(function(e) {
+            if(last_play_failed_item == undefined) {
+                // 播放失败,记下播放失败的item
+                last_play_failed_item = current_playing_item;
+                switchNextSong();
+            } else if(current_playing_item != last_play_failed_item) {// 防止不停循环播放占用CPU
+                switchNextSong();
+            }
+        });
     }
+    
+    function _nextSong() {
+        if(play_mode == PLAY_MODE_RECYCLE) {
+            // Recycle
+            incCurrentIndex(1);
+            playAudio();
+        } else if(play_mode == PLAY_MODE_RANDOM) {
+            // Random 
+            current_play_index = parseInt(Math.random() * song_box.children().length);
+            playAudio();
+        }
+    }
+    
+    function switchNextSong() {
+        debounce(_nextSong, 1000);
+    }
+    
     function getCurrentSongItem() {
         song_items = $(".songlist__songname_txt");
         if(current_play_index<0 || current_play_index>=song_items.length)
@@ -87,9 +138,6 @@ $(function(){
         current_progress_bar.css("width", parseInt(audio_player_el.currentTime*100/audio_player_el.duration, 10)+"%");
     }
     
-    function updateCurrentPlayingItem() {
-        
-    }
     audio_player.on({
         timeupdate: throttle(updateProgressBar, 300),
         ratechange: function() {
@@ -102,29 +150,10 @@ $(function(){
                 }
             });
         },
-        ended: function() {
-            if(play_mode == PLAY_MODE_RECYCLE) {
-                // Recycle 
-				timet=setInterval(delayTrwow,90);
-                incCurrentIndex(1);
-                playAudio();
-            } else if(play_mode == PLAY_MODE_RANDOM) {
-                // Random 
-                current_play_index = parseInt(Math.random() * song_box.children().length);
-                playAudio();
-            }
-			/*return true;*/
-        },
+        ended: switchNextSong,
         playing: function() {
             btn_play.addClass("btn_big_play--pause");
-            // Toggle last playing song item
-            if(last_playing_item != undefined) {
-                last_playing_item.removeClass("songlist__item--playing");
-                last_playing_item.find(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
-            }
-            // Set current playing item icon
-            current_playing_item.addClass("songlist__item--playing");
-            current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
+                        
             // Set song title
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
@@ -133,7 +162,6 @@ $(function(){
         pause: function() {
             btn_play.removeClass("btn_big_play--pause");
             $(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
-            $(".songlist__item--playing").removeClass("songlist__item--playing");
         }
     });
     btn_play.click(function() {
@@ -141,13 +169,13 @@ $(function(){
         if(need_play) {
             playAudio();
         } else {
-            audio_player_el.pause();
+            pauseAudio();
         }
     });
  
     function incCurrentIndex(index) {
         current_play_index += index;
-        if(current_play_index < 0)
+        if(current_play_index<0 || current_play_index>=song_box.children().length)
             current_play_index = 0;
     }
     $(".btn_big_prev").click(function() {
@@ -155,38 +183,11 @@ $(function(){
         playAudio();
     });
     $(".btn_big_next").click(function() {
-		time=setInterval(delayOne,90);/*audio_player_el.duration*100*/
         incCurrentIndex(1);
-        playAudio();	
+        playAudio();    
     });
-	//添加两个延迟,用时间来判断是否可播放,因为怕切换与循环播放冲突,就分别创建了两个个个一样的方法
-function delayOne(){
-	 clearInterval(time);
-     tt=setInterval(function(){
-	if(isNaN(parseInt(audio_player_el.duration))){
-	         incCurrentIndex(1);
-	           playAudio();	   
-		}
-		if(!isNaN(parseInt(audio_player_el.duration))){ 
-			 clearInterval(tt);
-		}
-		},100);	 
-	}
-function delayTrwow(){
-	 clearInterval(timet);
-	 ttt=setInterval(function(){
-	if(isNaN(parseInt(audio_player_el.duration))){
-	         incCurrentIndex(1);
-	           playAudio();	   
-		}
-		if(!isNaN(parseInt(audio_player_el.duration))){ 
-			 clearInterval(ttt);
-		}
-		},100);	
-	}
     // Playing progress bar
     $("#progress,#downloadbar,#spanplayer_bgbar").click(function(event){
-        audio_player_el.current
         progress_width = parseInt(100 * (event.pageX - progress_bar_base.offset().left) / progress_bar_base.width(), 10);
         current_progress_bar.css("width", progress_width+"%");
         return false;
@@ -298,19 +299,19 @@ function delayTrwow(){
             return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
         }
         $(".list_menu__play").click(function() {
-			time=setInterval(delayOne,90);
             var thisItem = $(this).parents("div .songlist__item");
             // Current playing is not me
             if(!isItemPlaying(thisItem))
                 loadAudio(thisItem);
-            
-            if(audio_player_el.paused)
+            if(audio_player_el.paused) {
                 // Play this item
-                audio_player_el.play();
-            else
-                audio_player_el.pause();
+                playAudio();
+            } else {
+                pauseAudio();
+            }
         });
     }
+    
     // 倍速
    function getPlaybackRateFromString(s) {
         return parseFloat(s.substr(0, s.length-1));
@@ -383,6 +384,6 @@ function delayTrwow(){
         var _s = $("#search-sug-input").val();
         fetchSongs("*" + _s + "*.mp3");
     });
-    fetchSongs("*metal-max-2-reloaded*.mp3");
+    fetchSongs("*test*.mp3");
     btn_play.click();
 });
