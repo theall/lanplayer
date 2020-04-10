@@ -48,7 +48,6 @@ $(function(){
             }
         }
     }
-    
     function loadAudio(index) {
         song_items = song_box.find("li>div");
         if(typeof(index) == "number") {
@@ -62,20 +61,20 @@ $(function(){
         if(current_playing_item == index || 
             (current_playing_item!=undefined && index!=undefined && current_playing_item[0]==index[0]))
             return;
-        
         title_scroll_index = 0;
         last_playing_item = current_playing_item;
         current_playing_item = index;
         audio_src = current_playing_item.find(".songlist__songname_txt").attr("src");
         audio_player.attr("src", audio_src);
         audio_player_el.playbackRate = audio_playback_rate;
+		
     }
     
     function playAudio() {
-        loadAudio(current_play_index);
-        audio_player_el.play();
+		loadAudio(current_play_index);
+        audio_player_el.play();  
+		
     }
-    
     function getCurrentSongItem() {
         song_items = $(".songlist__songname_txt");
         if(current_play_index<0 || current_play_index>=song_items.length)
@@ -106,6 +105,7 @@ $(function(){
         ended: function() {
             if(play_mode == PLAY_MODE_RECYCLE) {
                 // Recycle 
+				timet=setInterval(delayTrwow,90);
                 incCurrentIndex(1);
                 playAudio();
             } else if(play_mode == PLAY_MODE_RANDOM) {
@@ -113,6 +113,7 @@ $(function(){
                 current_play_index = parseInt(Math.random() * song_box.children().length);
                 playAudio();
             }
+			/*return true;*/
         },
         playing: function() {
             btn_play.addClass("btn_big_play--pause");
@@ -121,11 +122,9 @@ $(function(){
                 last_playing_item.removeClass("songlist__item--playing");
                 last_playing_item.find(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
             }
-            
             // Set current playing item icon
             current_playing_item.addClass("songlist__item--playing");
             current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
-            
             // Set song title
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
@@ -145,6 +144,7 @@ $(function(){
             audio_player_el.pause();
         }
     });
+ 
     function incCurrentIndex(index) {
         current_play_index += index;
         if(current_play_index < 0)
@@ -155,10 +155,35 @@ $(function(){
         playAudio();
     });
     $(".btn_big_next").click(function() {
+		time=setInterval(delayOne,90);/*audio_player_el.duration*100*/
         incCurrentIndex(1);
-        playAudio();
+        playAudio();	
     });
-    
+	//添加两个延迟,用时间来判断是否可播放,因为怕切换与循环播放冲突,就分别创建了两个个个一样的方法
+function delayOne(){
+	 clearInterval(time);
+     tt=setInterval(function(){
+	if(isNaN(parseInt(audio_player_el.duration))){
+	         incCurrentIndex(1);
+	           playAudio();	   
+		}
+		if(!isNaN(parseInt(audio_player_el.duration))){ 
+			 clearInterval(tt);
+		}
+		},100);	 
+	}
+function delayTrwow(){
+	 clearInterval(timet);
+	 ttt=setInterval(function(){
+	if(isNaN(parseInt(audio_player_el.duration))){
+	         incCurrentIndex(1);
+	           playAudio();	   
+		}
+		if(!isNaN(parseInt(audio_player_el.duration))){ 
+			 clearInterval(ttt);
+		}
+		},100);	
+	}
     // Playing progress bar
     $("#progress,#downloadbar,#spanplayer_bgbar").click(function(event){
         audio_player_el.current
@@ -273,6 +298,7 @@ $(function(){
             return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
         }
         $(".list_menu__play").click(function() {
+			time=setInterval(delayOne,90);
             var thisItem = $(this).parents("div .songlist__item");
             // Current playing is not me
             if(!isItemPlaying(thisItem))
@@ -285,9 +311,8 @@ $(function(){
                 audio_player_el.pause();
         });
     }
-    
     // 倍速
-    function getPlaybackRateFromString(s) {
+   function getPlaybackRateFromString(s) {
         return parseFloat(s.substr(0, s.length-1));
     }
     $(".txp_menuitem").click(function() {
