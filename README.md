@@ -20,4 +20,4 @@
 
 ## 界面预览
 
-![界面](https://files.gitee.com/group1/M00/0D/34/wKgCNF6PCraAU37mAAEhbg_-mKU854.jpg?token=8cca90e5e824973a5fb6102105ec7040&ts=1586432700&attname=screenshot.jpg&disposition=attachment)
+![界面](https://images.gitee.com/uploads/images/2020/0411/140325_2d44432c_4908530.jpeg "screenshot.jpg")
