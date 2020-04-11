@@ -79,14 +79,12 @@ $(function(){
         audio_player.attr("src", audio_src);
         audio_player_el.playbackRate = audio_playback_rate;
         
-        // Toggle last playing song item
+		// Toggle last playing song item
         if(last_playing_item != undefined) {
             last_playing_item.removeClass("songlist__item--playing");
-        }
-        
+			}
         // Set current playing item icon
         current_playing_item.addClass("songlist__item--playing");
-        current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
     }
     
     function pauseAudio() {
@@ -152,8 +150,15 @@ $(function(){
         },
         ended: switchNextSong,
         playing: function() {
-            btn_play.addClass("btn_big_play--pause");
-                        
+            btn_play.addClass("btn_big_play--pause");  
+			
+			// Toggle last playing song item
+			if(last_playing_item != undefined) {
+				last_playing_item.find(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
+			}
+			 // Set current playing item icon
+			current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
+			
             // Set song title
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
@@ -169,7 +174,7 @@ $(function(){
         if(need_play) {
             playAudio();
         } else {
-            pauseAudio();
+           audio_player_el.pause();
         }
     });
  
