@@ -20,6 +20,7 @@ $(function(){
     const PLAY_MODE_RANDOM = 3;
     var play_mode = PLAY_MODE_RECYCLE;
     var debounce_timer = false;
+	var storage=window.localStorage;
     
     setIcon('favicon.ico');
     function setIcon(icon) {
@@ -150,6 +151,8 @@ $(function(){
         },
         ended: switchNextSong,
         playing: function() {
+			storage.removeItem("index");
+			storage.setItem("index",JSON.stringify(current_play_index));
             btn_play.addClass("btn_big_play--pause");  
 			
 			// Toggle last playing song item
@@ -163,12 +166,15 @@ $(function(){
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
             song_title.attr("title", current_song_name);
+
+			
         },
         pause: function() {
             btn_play.removeClass("btn_big_play--pause");
             $(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
         }
     });
+	
     btn_play.click(function() {
         need_play = audio_player_el.paused;
         if(need_play) {
@@ -177,8 +183,8 @@ $(function(){
            audio_player_el.pause();
         }
     });
- 
-    function incCurrentIndex(index) {
+
+    function incCurrentIndex(index) {	
         current_play_index += index;
         if(current_play_index<0 || current_play_index>=song_box.children().length)
             current_play_index = 0;
@@ -191,17 +197,24 @@ $(function(){
         incCurrentIndex(1);
         playAudio();    
     });
+	
     // Playing progress bar
     $("#progress,#downloadbar,#spanplayer_bgbar").click(function(event){
         progress_width = parseInt(100 * (event.pageX - progress_bar_base.offset().left) / progress_bar_base.width(), 10);
         current_progress_bar.css("width", progress_width+"%");
         return false;
     });
-    
+	
+	var name=[],url=[],resultMap;
     // Load music list
     function querySongs(query) {
-        var resultMap = getList(query);
-        var tpl = "\
+		if(storage.getItem("jihe")!=null){	
+				resultMap=JSON.parse(storage.getItem("jihe"));
+				current_play_index=JSON.parse(storage.getItem("index"));
+		}else{
+				resultMap = getList(query);	
+		}
+		var tpl = "\
             <li> \
                 <div class=\"songlist__item\"> \
                 <div class=\"songlist__edit sprite\"> \
@@ -247,14 +260,25 @@ $(function(){
             song_name_el = _el.find(".songlist__songname_txt");
             song_name_el.attr("title", key);
             song_name_el.attr("src", resultMap[key]);
-            song_name_el.text(key);
-            
+			song_name_el.text(key);
+			url[_index]=resultMap[key];
+			name[_index]=key;
             _el.find(".songlist__number").html(_index+"");
             song_box.append(_el);
             _index++;
-        }
+		}
     }
-    
+
+	function localStorage(){
+		if(url.length!=0){
+			var jihe={};
+			for(var i in url){
+				jihe[name[i]]=url[i];
+			}
+			storage.setItem("jihe",JSON.stringify(jihe));
+		}
+	}
+	
     // Muted button
     var btnVoice = $(".btn_big_voice");
     function mutePlayer(muted) {
@@ -296,7 +320,7 @@ $(function(){
         volumeSlideTo(event.pageX);
         return false;
     });
-    
+
     function fetchSongs(query_string) {
         querySongs(query_string);
         // Song item's play button
@@ -306,8 +330,14 @@ $(function(){
         $(".list_menu__play").click(function() {
             var thisItem = $(this).parents("div .songlist__item");
             // Current playing is not me
+		try{
             if(!isItemPlaying(thisItem))
                 loadAudio(thisItem);
+				}
+				catch(e){
+					current_play_index=$(".list_menu__play").index(this);	
+					audio_player_el.play();
+				}
             if(audio_player_el.paused) {
                 // Play this item
                 playAudio();
@@ -384,10 +414,15 @@ $(function(){
     }, 1000);
     
     // 搜索
-    $("#search_songs").submit(function(e) {
+    $("#search_songs").submit(function(e) {	
+		current_play_index = 0;
+		storage.removeItem("index");
+		storage.setItem("index",JSON.stringify(current_play_index));
+		storage.removeItem("jihe");
         e.preventDefault();
         var _s = $("#search-sug-input").val();
         fetchSongs("*" + _s + "*.mp3");
+		localStorage();	
     });
     fetchSongs("*test*.mp3");
     btn_play.click();
