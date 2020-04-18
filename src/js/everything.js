@@ -21,11 +21,15 @@ function extractNamesJquery(res) {
     return results;
 }
 
-function absolutePathToUrl(path) {
+function absolutePathToUrl(path, fileName) {
     path = path.replace(/\\/g, "/");
-    path = encodeURI(path);
-    path = path.replace(":", "%3A");
-    path = "/" + path;
+    path_array = path.split('/');
+    path_array.push(fileName);
+    for(var i=0;i<path_array.length;i++) {
+        path_array[i] = encodeURIComponent(path_array[i]);
+    }
+    path_array.unshift("");
+    path = path_array.join('/');
     return path;
 }
 
@@ -42,13 +46,15 @@ function extractNamesFromJson(res) {
     res.results.forEach(function(el) {
         var fileName = el["name"];
         var baseName = extractBaseName(fileName);
-        ret[baseName] = absolutePathToUrl(el["path"]) + "\\" + fileName; 
+        ret[baseName] = absolutePathToUrl(el["path"], fileName); 
     });
     return ret;
 }
 
 function getList(param, callback) {
-    var queryUrl = encodeURI('/?s=' + param + "&j=1&path_column=1");
+    if(param != undefined)
+        param = encodeURIComponent(param);
+    var queryUrl = '/?s=' + param + "&j=1&path_column=1";
     var self = this;
     self.param = param;
     if(callback != undefined) {
