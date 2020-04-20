@@ -21,6 +21,7 @@ $(function(){
     var play_mode = PLAY_MODE_RECYCLE;
     var debounce_timer = false;
 	var storage=window.localStorage;
+	var song_box_delet=[];
     
     setIcon('favicon.ico');
     function setIcon(icon) {
@@ -38,7 +39,6 @@ $(function(){
         var e = parseInt(secs % 60, 10);
         return (n < 10 ? "0" + n: n) + ":" + (e < 10 ? "0" + e: e)
     }
-    
     // 节流函数
     function throttle(func, delay) {
         var prev = Date.now();
@@ -87,8 +87,10 @@ $(function(){
         // Set current playing item icon
         current_playing_item.addClass("songlist__item--playing");
     }
-    
+	
+    var tirm = undefined;
     function pauseAudio() {
+		clearTimeout(tirm);
         audio_player_el.pause();
     }
     
@@ -165,9 +167,7 @@ $(function(){
             // Set song title
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
-            song_title.attr("title", current_song_name);
-
-			
+            song_title.attr("title", current_song_name);	
         },
         pause: function() {
             btn_play.removeClass("btn_big_play--pause");
@@ -268,17 +268,43 @@ $(function(){
             _index++;
 		}
     }
-
+	
+	//保存歌曲列表
 	function localStorage(){
+		var jihe={};
 		if(url.length!=0){
-			var jihe={};
 			for(var i in url){
 				jihe[name[i]]=url[i];
 			}
 			storage.setItem("jihe",JSON.stringify(jihe));
 		}
 	}
+
+	function baocun(){
+		var jihe={};
+		if(storage.getItem("jihe")!=null){	
+		var url_a=[],name_a=[];
+		var index_=1;
+		for(key in resultMap){
+			url_a[index_]=resultMap[key];
+			name_a[index_]=key;
+			index_++;
+		}
+		if(url_a.length!=url.length){
+			storage.removeItem("jihe");
+			for(var i in name){
+				jihe[name[i]]=url[i];
+			}
+			storage.setItem("jihe",JSON.stringify(jihe));
+		}
+		}
+	}
+	setInterval(baocun,100000);
 	
+	window.onbeforeunload=function(){
+	   baocun();
+	   }
+	   
     // Muted button
     var btnVoice = $(".btn_big_voice");
     function mutePlayer(muted) {
@@ -327,17 +353,17 @@ $(function(){
         function isItemPlaying(item) {
             return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
         }
+		//play or pauser
         $(".list_menu__play").click(function() {
             var thisItem = $(this).parents("div .songlist__item");
             // Current playing is not me
-		try{
-            if(!isItemPlaying(thisItem))
+			try{
+				if(!isItemPlaying(thisItem))
                 loadAudio(thisItem);
-				}
-				catch(e){
-					current_play_index=$(".list_menu__play").index(this);	
-					audio_player_el.play();
-				}
+			}catch(e){
+				current_play_index=$(".list_menu__play").index(this);	
+				audio_player_el.play();
+			}
             if(audio_player_el.paused) {
                 // Play this item
                 playAudio();
@@ -345,6 +371,29 @@ $(function(){
                 pauseAudio();
             }
         });
+		//delete
+		$(".songlist__delete").click(function(){
+			var in_dex = $(".songlist__delete").index(this);
+			name.splice(in_dex+1,1);
+			url.splice(in_dex+1,1);
+			song_box.children("li").eq(in_dex).remove();
+			for(var i = 1 ; i < song_box.children("li").length+1;i++){
+				$(".songlist__number").eq(i-1).html(i+"");
+			}
+		    if(current_play_index==in_dex){
+				if(!audio_player_el.paused)
+					playAudio();
+				else{
+					trim=setTimeout(function(){playAudio();setTimeout(pauseAudio(),100)},400);
+					loadAudio(current_play_index);
+					pauseAudio(); 
+				}
+			}else{
+				if(current_play_index!=0&&current_play_index>in_dex){
+					current_play_index--;
+				}
+			}
+		});
     }
     
     // 倍速
