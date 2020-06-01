@@ -52,15 +52,13 @@ function extractNamesFromJson(res) {
 }
 
 function getList(param, callback) {
-    if(param != undefined)
-        param = encodeURIComponent(param);
-    var queryUrl = '/?s=' + param + "&j=1&path_column=1";
-    var self = this;
-    self.param = param;
+    if(param == undefined)
+        return {};
+    
     if(callback != undefined) {
         $.ajax({
-            url: queryUrl,
-            async: true,
+            url: "/", 
+            data: {s:param, j:1, path_column:1},
             success: function() {
                 callback(extractNamesFromJson(response.responseText));
             },
@@ -71,7 +69,7 @@ function getList(param, callback) {
     } else {
         var response = $.ajax({
             url: "/", 
-            data: {"s":param, "j":1, "path_column":1},
+            data: {s:param, j:1, path_column:1},
             async:false});
         return extractNamesFromJson(response.responseText);
     }
