@@ -69,7 +69,10 @@ function getList(param, callback) {
             }
         });
     } else {
-        var response = $.ajax({url:queryUrl, async:false});
+        var response = $.ajax({
+            url: "/", 
+            data: {"s":param, "j":1, "path_column":1},
+            async:false});
         return extractNamesFromJson(response.responseText);
     }
     return {};

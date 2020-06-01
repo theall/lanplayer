@@ -20,7 +20,7 @@ $(function(){
     const PLAY_MODE_RANDOM = 3;
     var play_mode = PLAY_MODE_RECYCLE;
     var debounce_timer = false;
-	var storage=window.localStorage;
+    var storage=window.localStorage;
     
     setIcon('favicon.ico');
     function setIcon(icon) {
@@ -79,17 +79,17 @@ $(function(){
         audio_player.attr("src", audio_src);
         audio_player_el.playbackRate = audio_playback_rate;
         
-		// Toggle last playing song item
+        // Toggle last playing song item
         if(last_playing_item != undefined) {
             last_playing_item.removeClass("songlist__item--playing");
-			}
+            }
         // Set current playing item icon
         current_playing_item.addClass("songlist__item--playing");
     }
-	
+    
     var tirm = undefined;
     function pauseAudio() {
-		clearTimeout(tirm);
+        clearTimeout(tirm);
         audio_player_el.pause();
     }
     
@@ -152,29 +152,29 @@ $(function(){
         },
         ended: switchNextSong,
         playing: function() {
-			storage.removeItem("index");
-			storage.setItem("index",JSON.stringify(current_play_index));
+            storage.removeItem("index");
+            storage.setItem("index",JSON.stringify(current_play_index));
             btn_play.addClass("btn_big_play--pause");  
-			
-			// Toggle last playing song item
-			if(last_playing_item != undefined) {
-				last_playing_item.find(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
-			}
-			 // Set current playing item icon
-			current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
-			
+            
+            // Toggle last playing song item
+            if(last_playing_item != undefined) {
+                last_playing_item.find(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
+            }
+             // Set current playing item icon
+            current_playing_item.find(".list_menu__icon_play").attr("class", "list_menu__icon_pause");
+            
             // Set song title
             var current_song_name = current_playing_item.find(".songlist__songname_txt").attr("title");
             song_title.text(current_song_name);
             song_title.attr("title", current_song_name);
-			$(".js_singer").text("Bilge Theall");
+            $(".js_singer").text("Bilge Theall");
         },
         pause: function() {
             btn_play.removeClass("btn_big_play--pause");
             $(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
         }
     });
-	
+    
     btn_play.click(function() {
         need_play = audio_player_el.paused;
         if(need_play) {
@@ -184,7 +184,7 @@ $(function(){
         }
     });
 
-    function incCurrentIndex(index) {	
+    function incCurrentIndex(index) {    
         current_play_index += index;
         if(current_play_index<0 || current_play_index>=song_box.children().length)
             current_play_index = 0;
@@ -203,24 +203,24 @@ $(function(){
     $(".btn_big_next").click(function() {
        _nextSong();
     });
-	
+    
     // Playing progress bar
     $("#progress,#downloadbar,#spanplayer_bgbar").click(function(event){
         progress_width = parseInt(100 * (event.pageX - progress_bar_base.offset().left) / progress_bar_base.width(), 10);
         current_progress_bar.css("width", progress_width+"%");
         return false;
     });
-	
-	var name=[],url=[],resultMap;
+    
+    var name=[],url=[],resultMap;
     // Load music list
     function querySongs(query) {
-		if(storage.getItem("jihe")!=null){	
-				resultMap=JSON.parse(storage.getItem("jihe"));
-				current_play_index=JSON.parse(storage.getItem("index"));
-		}else{
-				resultMap = getList(query);	
-		}
-		var tpl = "\
+        if(storage.getItem("jihe")!=null){    
+                resultMap=JSON.parse(storage.getItem("jihe"));
+                current_play_index=JSON.parse(storage.getItem("index"));
+        }else{
+                resultMap = getList(query);    
+        }
+        var tpl = "\
             <li> \
                 <div class=\"songlist__item\"> \
                 <div class=\"songlist__edit sprite\"> \
@@ -266,51 +266,51 @@ $(function(){
             song_name_el = _el.find(".songlist__songname_txt");
             song_name_el.attr("title", key);
             song_name_el.attr("src", resultMap[key]);
-			song_name_el.text(key);
-			url[_index]=resultMap[key];
-			name[_index]=key;
+            song_name_el.text(key);
+            url[_index]=resultMap[key];
+            name[_index]=key;
             _el.find(".songlist__number").html(_index+"");
             song_box.append(_el);
             _index++;
-		}
+        }
     }
-	
-	//保存歌曲列表
-	function localStorage(){
-		var jihe={};
-		if(url.length!=0){
-			for(var i in url){
-				jihe[name[i]]=url[i];
-			}
-			storage.setItem("jihe",JSON.stringify(jihe));
-		}
-	}
+    
+    //保存歌曲列表
+    function localStorage(){
+        var jihe={};
+        if(url.length!=0){
+            for(var i in url){
+                jihe[name[i]]=url[i];
+            }
+            storage.setItem("jihe",JSON.stringify(jihe));
+        }
+    }
 
-	function baocun(){
-		var jihe={};
-		if(storage.getItem("jihe")!=null){	
-		var url_a=[],name_a=[];
-		var index_=1;
-		for(key in resultMap){
-			url_a[index_]=resultMap[key];
-			name_a[index_]=key;
-			index_++;
-		}
-		if(url_a.length!=url.length){
-			storage.removeItem("jihe");
-			for(var i in name){
-				jihe[name[i]]=url[i];
-			}
-			storage.setItem("jihe",JSON.stringify(jihe));
-		}
-		}
-	}
-	setInterval(baocun,100000);
-	
-	window.onbeforeunload=function(){
-	   baocun();
-	}
-	   
+    function baocun(){
+        var jihe={};
+        if(storage.getItem("jihe")!=null){    
+        var url_a=[],name_a=[];
+        var index_=1;
+        for(key in resultMap){
+            url_a[index_]=resultMap[key];
+            name_a[index_]=key;
+            index_++;
+        }
+        if(url_a.length!=url.length){
+            storage.removeItem("jihe");
+            for(var i in name){
+                jihe[name[i]]=url[i];
+            }
+            storage.setItem("jihe",JSON.stringify(jihe));
+        }
+        }
+    }
+    setInterval(baocun,100000);
+    
+    window.onbeforeunload=function(){
+       baocun();
+    }
+       
     // Muted button
     var btnVoice = $(".btn_big_voice");
     function mutePlayer(muted) {
@@ -318,11 +318,11 @@ $(function(){
         if(muted) {
             btnVoice.addClass("btn_big_voice--no");
             btnVoice.attr("title", "打开声音[M]");
-			storage.setItem("muted",JSON.stringify(muted));
+            storage.setItem("muted",JSON.stringify(muted));
         } else {
             btnVoice.removeClass("btn_big_voice--no");
             btnVoice.attr("title", "关闭声音[M]");
-			storage.setItem("muted",JSON.stringify(muted));
+            storage.setItem("muted",JSON.stringify(muted));
         }
     }
     btnVoice.click(function() {
@@ -330,8 +330,8 @@ $(function(){
         muted = !muted;
         mutePlayer(muted);
     });
-	if(JSON.parse(storage.getItem("muted"))!=null&&JSON.parse(storage.getItem("muted"))!=undefined)
-	mutePlayer(JSON.parse(storage.getItem("muted")));
+    if(JSON.parse(storage.getItem("muted"))!=null&&JSON.parse(storage.getItem("muted"))!=undefined)
+    mutePlayer(JSON.parse(storage.getItem("muted")));
     
     // Change volume
     var volume_progress = $("#spanvolumebar");//volume bar
@@ -342,9 +342,9 @@ $(function(){
         // set volume to audio player
         audio_player_el.volume = val/100;
         volume_progress.css("width", val+"%");
-		//保存音量
-		storage.removeItem("volume");
-		storage.setItem("volume",JSON.stringify(val));
+        //保存音量
+        storage.removeItem("volume");
+        storage.setItem("volume",JSON.stringify(val));
     }
     function volumeSlideTo(x) {
         val = parseInt(100 * (x - volume_progress.offset().left) / volume_progress.parent().width(), 10);
@@ -359,8 +359,8 @@ $(function(){
         volumeSlideTo(event.pageX);
         return false;
     });
-	if(JSON.parse(storage.getItem("volume"))!=null&&JSON.parse(storage.getItem("volume"))!=undefined)
-	changeVolume(JSON.parse(storage.getItem("volume")));
+    if(JSON.parse(storage.getItem("volume"))!=null&&JSON.parse(storage.getItem("volume"))!=undefined)
+    changeVolume(JSON.parse(storage.getItem("volume")));
 
     function fetchSongs(query_string) {
         querySongs(query_string);
@@ -368,17 +368,17 @@ $(function(){
         function isItemPlaying(item) {
             return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
         }
-		//play or pauser
+        //play or pauser
         $(".list_menu__play").click(function() {
             var thisItem = $(this).parents("div .songlist__item");
             // Current playing is not me
-			try{
-				if(!isItemPlaying(thisItem))
+            try{
+                if(!isItemPlaying(thisItem))
                 loadAudio(thisItem);
-			}catch(e){
-				current_play_index=$(".list_menu__play").index(this);	
-				audio_player_el.play();
-			}
+            }catch(e){
+                current_play_index=$(".list_menu__play").index(this);    
+                audio_player_el.play();
+            }
             if(audio_player_el.paused) {
                 // Play this item
                 playAudio();
@@ -386,122 +386,122 @@ $(function(){
                 pauseAudio();
             }
         });
-		//删除
-		$(".songlist__delete").click(function(){
-			var in_dex = $(".songlist__delete").index(this);
-			$(this).parent().parent().remove();
-			delete_update(in_dex);
-		});
-		//选中处理
-		$(".songlist__checkbox").click(function(){
-			var in_dex = $(".songlist__checkbox").index(this);
-			var check = $(this).attr("checked");
-			if(!check){	
-				if(in_dex==0){
-					$(".songlist__checkbox").attr("checked",false);
-				}else{
-					$(".songlist__checkbox").eq(0).attr("checked",false);
-					$(this).attr("checked",false);
-				}
-			}else{	
-				if(in_dex==0){
-					$(".songlist__checkbox").attr("checked",true);
-				}else{
-					$(this).attr("checked",true);
-					if($(" .songlist__edit :checked").length==$(".songlist__checkbox").length-1){
-						$(".songlist__checkbox").eq(0).attr("checked",true);
-					}
-				}
-			}
-		})
-		//下载
-		$(".list_menu__down").click(function(){
-			menu__down();
-		})
+        //删除
+        $(".songlist__delete").click(function(){
+            var in_dex = $(".songlist__delete").index(this);
+            $(this).parent().parent().remove();
+            delete_update(in_dex);
+        });
+        //选中处理
+        $(".songlist__checkbox").click(function(){
+            var in_dex = $(".songlist__checkbox").index(this);
+            var check = $(this).attr("checked");
+            if(!check){    
+                if(in_dex==0){
+                    $(".songlist__checkbox").attr("checked",false);
+                }else{
+                    $(".songlist__checkbox").eq(0).attr("checked",false);
+                    $(this).attr("checked",false);
+                }
+            }else{    
+                if(in_dex==0){
+                    $(".songlist__checkbox").attr("checked",true);
+                }else{
+                    $(this).attr("checked",true);
+                    if($(" .songlist__edit :checked").length==$(".songlist__checkbox").length-1){
+                        $(".songlist__checkbox").eq(0).attr("checked",true);
+                    }
+                }
+            }
+        })
+        //下载
+        $(".list_menu__down").click(function(){
+            menu__down();
+        })
     }
     
-	//批量选择删除
-	var Pd=false;
-	$(".js_all_delete").click(function(){
-		var delet_jilu=[];
-		var checked=$(" .songlist__edit :checked");
-		if($(".songlist__checkbox").eq(0).prop("checked")==true){
-			checked=$(" .songlist__edit :checked:gt(0)");
-			$(".songlist__checkbox").eq(0).attr("checked",false);
-		}
-		for(var i=1;i<$(".songlist__checkbox").length;i++){
-			if($(".songlist__checkbox").eq(i).prop("checked")==true){
-				delet_jilu.push(i);
-			}
-		}
-		var indexx = 0;
-		checked.each(function(){
-			Pd = true;
-			delete_update(delet_jilu[indexx]-(indexx+1));	
-			indexx++;
-			$(this).parent().parent().remove();
-		})
-	})
-	
-	//删除后更新
-	function delete_update(index){
-		for(var i = 0 ; i < song_box.children("li").length+1;i++){
-			$(".songlist__number").eq(i-1).html(i+"");
-		}
-		name.splice(index+1,1);
-		url.splice(index+1,1);
-		if(current_play_index==index){
-			if(Pd==true){
-			current_play_index++;
-			Pd=false;
-			}
-			if(!audio_player_el.paused)
-				playAudio();
-			else{
-				trim=setTimeout(function(){playAudio();setTimeout(pauseAudio(),100)},400);
-				loadAudio(current_play_index);
-				pauseAudio(); 
-			}
-		}else{
-			if(current_play_index!=0&&current_play_index>index){
-				current_play_index--;
-			}
-		}
-		if($(".songlist__item").length==1){
-			$(".js_all_deleted").click();
-		}
-	}
-	
-	//清空列表
-	$(".js_all_deleted").click(function(){
-		song_box.empty();
-		audio_player.attr("src", null);
-		btn_play.removeClass("btn_big_play--pause");
-		song_title.text("暂无歌曲");
-		song_title.attr("title", "");	
-		$(".js_singer").text("");
-		current_progress_bar.css("width","0px");
-		time_duration.html("00:00 / 00:00");
-		current_play_index = 0;
-		name.length = 0;
-		url.length = 0;;
-	})
-	
-	//批量下载
-	$(".js_all_down").click(function(){
-		menu__down();
-	})
-	
-	//底部下载
-	$(".btn_big_down").click(function(){
-		menu__down();
-	})
-	
-	//下载处理
-	function menu__down(){
-		alert("下载成功");
-	}
-	
+    //批量选择删除
+    var Pd=false;
+    $(".js_all_delete").click(function(){
+        var delet_jilu=[];
+        var checked=$(" .songlist__edit :checked");
+        if($(".songlist__checkbox").eq(0).prop("checked")==true){
+            checked=$(" .songlist__edit :checked:gt(0)");
+            $(".songlist__checkbox").eq(0).attr("checked",false);
+        }
+        for(var i=1;i<$(".songlist__checkbox").length;i++){
+            if($(".songlist__checkbox").eq(i).prop("checked")==true){
+                delet_jilu.push(i);
+            }
+        }
+        var indexx = 0;
+        checked.each(function(){
+            Pd = true;
+            delete_update(delet_jilu[indexx]-(indexx+1));    
+            indexx++;
+            $(this).parent().parent().remove();
+        })
+    })
+    
+    //删除后更新
+    function delete_update(index){
+        for(var i = 0 ; i < song_box.children("li").length+1;i++){
+            $(".songlist__number").eq(i-1).html(i+"");
+        }
+        name.splice(index+1,1);
+        url.splice(index+1,1);
+        if(current_play_index==index){
+            if(Pd==true){
+            current_play_index++;
+            Pd=false;
+            }
+            if(!audio_player_el.paused)
+                playAudio();
+            else{
+                trim=setTimeout(function(){playAudio();setTimeout(pauseAudio(),100)},400);
+                loadAudio(current_play_index);
+                pauseAudio(); 
+            }
+        }else{
+            if(current_play_index!=0&&current_play_index>index){
+                current_play_index--;
+            }
+        }
+        if($(".songlist__item").length==1){
+            $(".js_all_deleted").click();
+        }
+    }
+    
+    //清空列表
+    $(".js_all_deleted").click(function(){
+        song_box.empty();
+        audio_player.attr("src", null);
+        btn_play.removeClass("btn_big_play--pause");
+        song_title.text("暂无歌曲");
+        song_title.attr("title", "");    
+        $(".js_singer").text("");
+        current_progress_bar.css("width","0px");
+        time_duration.html("00:00 / 00:00");
+        current_play_index = 0;
+        name.length = 0;
+        url.length = 0;;
+    })
+    
+    //批量下载
+    $(".js_all_down").click(function(){
+        menu__down();
+    })
+    
+    //底部下载
+    $(".btn_big_down").click(function(){
+        menu__down();
+    })
+    
+    //下载处理
+    function menu__down(){
+        alert("下载成功");
+    }
+    
     // 倍速
    function getPlaybackRateFromString(s) {
         return parseFloat(s.substr(0, s.length-1));
@@ -551,22 +551,22 @@ $(function(){
         audio_player_el.loop = play_mode == PLAY_MODE_SINGLE;
         updatePlayModeUI();
     });
-	
-	//打开纯净模式
-	$("#simp_btn").click(function(){
-		$("#simp_btn").hide();
-		$("#off_btn").show();
-		$(".player_style_normal").hide();
-		$(".player_style_only").show();
-	})
+    
+    //打开纯净模式
+    $("#simp_btn").click(function(){
+        $("#simp_btn").hide();
+        $("#off_btn").show();
+        $(".player_style_normal").hide();
+        $(".player_style_only").show();
+    });
     //关闭纯净模式
-	$("#off_btn").click(function(){
-		$("#simp_btn").show();
-		$("#off_btn").hide();
-		$(".player_style_normal").show();
-		$(".player_style_only").hide();
-	})
-	
+    $("#off_btn").click(function(){
+        $("#simp_btn").show();
+        $("#off_btn").hide();
+        $(".player_style_normal").show();
+        $(".player_style_only").hide();
+    });
+    
     // 标题滚动
     function getPlayingSongTitle() {
         var _temp_str = '';
@@ -584,15 +584,15 @@ $(function(){
     }, 1000);
     
     // 搜索
-    $("#search_songs").submit(function(e) {	
-		current_play_index = 0;
-		storage.removeItem("index");
-		storage.setItem("index",JSON.stringify(current_play_index));
-		storage.removeItem("jihe");
+    $("#search_songs").submit(function(e) {    
+        current_play_index = 0;
+        storage.removeItem("index");
+        storage.setItem("index",JSON.stringify(current_play_index));
+        storage.removeItem("jihe");
         e.preventDefault();
         var _s = $("#search-sug-input").val();
         fetchSongs("*" + _s + "*.mp3");
-		localStorage();	
+        localStorage();    
     });
     fetchSongs("*test*.mp3");
     btn_play.click();
