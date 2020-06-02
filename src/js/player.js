@@ -1,61 +1,71 @@
 $(function(){
-    var title = $("title");
-    var title_scroll_index = 0;
-    var audio_player = $("#h5audio_media");
-    var audio_player_el = audio_player[0];
-    var song_box = $("#song_box");
-    var time_duration = $("#time_show");
-    var current_play_index = 0;
-    var current_playing_item = undefined;
-    var last_play_failed_item = undefined;
-    var last_playing_item = undefined;
-    var audio_playback_rate = 1;
-    var btn_play = $("#btnplay");
-    var progress_bar_base = $("#spanplayer_bgbar");
-    var current_progress_bar = $("#spanplaybar");
-    var song_title = $("#sim_song_info>a:first");
-    var song_author = song_title.next();
-    const PLAY_MODE_SINGLE = 1;
-    const PLAY_MODE_RECYCLE = 2;
-    const PLAY_MODE_RANDOM = 3;
-    var play_mode = PLAY_MODE_RECYCLE;
-    var debounce_timer = false;
-    var storage=window.localStorage;
+    var title = $("title");// title对象
+    var title_scroll_index = 0;// 标题滚动位置
+    var audio_player = $("#h5audio_media");// 获取audio对象
+    var audio_player_el = audio_player[0];// 获取audio元素
+    var song_box = $("#song_box");// 获取音乐列表ul对象
+    var time_duration = $("#time_show");// 当前播放时长对象
+    var current_play_index = 0;// 当前播放的音乐在列表中的索引号
+    var current_playing_item = undefined;// 记录当前播放的音乐li对象
+    var last_play_failed_item = undefined;// 上一次播放失败的音乐项目
+    var last_playing_item = undefined;// 上一个播放成功的音乐
+    var audio_playback_rate = 1;// 回放速度
+    var btn_play = $("#btnplay");// 播放按钮对象
+    var progress_bar_base = $("#spanplayer_bgbar");// 播放器进度条父对象
+    var current_progress_bar = $("#spanplaybar");// 当前播放进度条
+    var song_title = $("#sim_song_info>a:first");// 当前播放音乐的标题对象
+    var song_author = song_title.next();// 当前播放音乐的作者
+    const PLAY_MODE_SINGLE = 1;// 播放模式：单个循环
+    const PLAY_MODE_RECYCLE = 2;// 播放模式：列表循环
+    const PLAY_MODE_RANDOM = 3;// 播放模式：随机循环
+    var play_mode = PLAY_MODE_RECYCLE;// 记录当前播放模式
+    var debounce_timer = false;// 防抖定时器
+    var storage = window.localStorage;// 本机存储对象
     
-    setIcon('favicon.ico');
+    setIcon('favicon.ico');// 设置应用图标
+    
+    // 设置图标
+    // icon 图标的url
     function setIcon(icon) {
-        var favicon = document.createElement('link');
+        var favicon = document.createElement('link');//创建一个link元素
         favicon.rel = 'shortcut icon';
         favicon.href = icon;
         favicon.type = 'image/x-icon';
-        document.head.append(favicon);
+        document.head.append(favicon);//附加到head标签下
     }
     
+    // 将一个秒数转换成时间格式
+    // secs 一个秒数字
     function secondsToTimeStr(secs) {
-        if(secs==undefined || isNaN(secs))
+        if(secs==undefined || isNaN(secs))// 判断是否是非法数字
             secs = 0;
-        var n = parseInt(secs / 60, 10);
-        var e = parseInt(secs % 60, 10);
-        return (n < 10 ? "0" + n: n) + ":" + (e < 10 ? "0" + e: e)
+        var n = parseInt(secs / 60, 10);// 求分钟数
+        var e = parseInt(secs % 60, 10);// 求剩余的秒数
+        return (n < 10 ? "0" + n: n) + ":" + (e < 10 ? "0" + e: e);// 返回时间格式，例如12:33，如果分秒数不足10，前面补0
     }
-    // 节流函数
+    
+    // 节流函数：让函数在一定时间段内只执行一次
+    // func 要执行的函数
+    // delay 执行间隔
     function throttle(func, delay) {
-        var prev = Date.now();
-        return function() {
-            var context = this;
-            var args = arguments;
-            var now = Date.now();
-            if (now - prev >= delay) {
-                func.apply(context, args);
-                prev = Date.now();
+        var prev = Date.now();// 记录当前时间
+        return function() {//返回函数对象
+            var context = this;// 记录当前对象
+            var args = arguments;// 记录参数
+            var now = Date.now();// 记录现在时间
+            if (now - prev >= delay) {// 判断是否超过间隔时间
+                func.apply(context, args);// 执行函数func
+                prev = Date.now();// 重新开始记录时间
             }
         }
     }
     
-    // 防抖函数
+    // 保证最后一次事件发生后经过一段时间再执行函数
+    // callback 要执行的回调函数
+    // time 超时间隔
     debounce = function(callback, time) {
-        clearTimeout(debounce_timer);
-        debounce_timer = setTimeout(callback, time);
+        clearTimeout(debounce_timer);// 清除定时器
+        debounce_timer = setTimeout(callback, time);// 重新设置定时器
     }
     
     function loadAudio(index) {
@@ -122,6 +132,7 @@ $(function(){
         }
     }
     
+    // 切换下一曲
     function switchNextSong() {
         debounce(_nextSong, 1000);
     }
@@ -133,8 +144,12 @@ $(function(){
         return $(song_items[current_play_index]);
     }
     
+    // 更新进度条
     function updateProgressBar() {
+        // 将当前播放的时长与总时长转换成时间格式后更新到界面上
         time_duration.html(secondsToTimeStr(audio_player_el.currentTime) + " / " + secondsToTimeStr(audio_player_el.duration));
+        
+        // 更新当前播放进度条
         current_progress_bar.css("width", parseInt(audio_player_el.currentTime*100/audio_player_el.duration, 10)+"%");
     }
     
