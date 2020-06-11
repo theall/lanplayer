@@ -5,6 +5,7 @@ $(function(){
     const CFG_SIMPLE_VIEW = 'simple_view';
     const CFG_PLAY_MODE = 'play_mode';
     const CFG_KEY = "config";
+    const MUSIC_KEY = 'musics';
     
     const PLAY_MODE_SINGLE = 1;// 播放模式：单个循环
     const PLAY_MODE_RECYCLE = 2;// 播放模式：列表循环
@@ -29,7 +30,7 @@ $(function(){
     var song_title = $("#sim_song_info>a:first");// 当前播放音乐的标题对象
     var song_author = song_title.next();// 当前播放音乐的作者
     var btn_play_mode = $("#play_mod");// 播放模式按钮
-    var play_mode = PLAY_MODE_RECYCLE;// 记录当前播放模式
+    var play_mode = undefined;// 记录当前播放模式
     var debounce_timer = false;// 防抖定时器
     var btn_simple_view_on = $("#simp_btn");
     var btn_simple_view_off = $("#off_btn");
@@ -40,6 +41,101 @@ $(function(){
     var btnVoice = $(".btn_big_voice");
     var volume_progress = $("#spanvolumebar");//volume bar
     var Pd=false;
+    var song_container = new SongContainer();
+    var song_item_map = {}; // 音乐item与显示item映射
+    
+    function SongItem(name, src) {
+        let typeName = typeof(name);
+        if(typeName == 'string') {
+            this.checked = false;
+            this.playing = false;
+            this.singer = '';
+            this.duration = 0;
+            this.name = name;
+            this.src = src;
+        } else if(typeName == 'object') {
+            for(prop in name)
+                this[prop] = name[prop];
+        }
+    }
+    
+    function SongContainer() {
+        this.items = [];
+        this.playing = -1;
+        this.dirty = false;
+    }
+    
+    SongContainer.prototype.getPlayingIndex = function() {
+        return this.playing;
+    }
+    
+    SongContainer.prototype.setPlayingIndex = function(index) {
+        if(this.playing == index)
+            return;
+        
+        let oldIndex = this.playing;
+        this.playing = index;
+        if(this.onPlayingIndexChanged)
+            this.onPlayingIndexChanged(oldIndex, index);
+    }
+    
+    SongContainer.prototype.getPlayingItem = function() {
+        return this.items[this.playing] || null;
+    }
+    
+    SongContainer.prototype.getItem = function(index) {
+        return this.items[index] || null;
+    }
+    
+    SongContainer.prototype.getSize = function() {
+        return this.items.length;
+    }
+    
+    SongContainer.prototype.add = function(item, index) {
+        if(index == undefined) {
+            index = this.items.length;
+            this.items.push(item);
+        } else {
+            this.items.splice(index, 0, item);
+        }
+        this.dirty = true;
+        
+        if(this.onItemAdded != undefined) {
+            this.onItemAdded([item], [index]);
+        }
+    }
+    
+    SongContainer.prototype.remove = function(index) {
+        let items = this.items.splice(index, 1);
+        this.dirty = true;
+        
+        if(this.onItemRemoved != undefined) {
+            this.onItemRemoved(items, [index]);
+        }
+    }
+    
+    SongContainer.prototype.save = function() {
+        if(this.dirty) {
+            this.dirty = false;
+            window.localStorage.setItem(MUSIC_KEY, JSON.stringify(this));
+        }
+    }
+    
+    SongContainer.prototype.load = function() {
+        let default_musics = {
+            items: []
+        };
+        let musics = JSON.parse(window.localStorage.getItem(MUSIC_KEY)) || default_musics;
+        let items = musics['items']
+        for(let i=0;i<items.length;i++) {
+            this.add(new SongItem(items[i]));
+        }
+    }
+    
+    SongContainer.prototype.clear = function() {
+        for(let i=0;i<this.items.length;i++)
+            this.remove(i);
+    }
     
     // 设置图标
     function setIcon(icon) {
@@ -227,6 +323,7 @@ $(function(){
         if(current_play_index<0 || current_play_index>=song_box.children().length)
             current_play_index = 0;
     }
+    
     // 上一曲
     $(".btn_big_prev").click(function() {
        if(play_mode == PLAY_MODE_RECYCLE) {
@@ -251,99 +348,21 @@ $(function(){
         return false;
     });
     
-    // Load music list
+    // Query music list from Everything
     function querySongs(query) {
-        if(storage.getItem("jihe")!=null){    
-                resultMap=JSON.parse(storage.getItem("jihe"));
-                current_play_index=JSON.parse(storage.getItem("index"));
-        }else{
-                resultMap = getList(query);    
+        let items = [];
+        resultMap = getList(query);
+        
+        for(key in resultMap) {
+            let item = new SongItem(key, resultMap[key]);
+            items.push(item);
         }
-        var tpl = "\
-            <li> \
-                <div class=\"songlist__item\"> \
-                <div class=\"songlist__edit sprite\"> \
-                    <input type=\"checkbox\" class=\"songlist__checkbox\"> \
-                </div> \
-                <div class=\"songlist__number\">1</div> \
-                <div class=\"songlist__songname\"> \
-                    <span class=\"songlist__songname_txt\" title=\"Onimusha 3 Opening\">Onimusha 3 Opening</span> \
-                    <div class=\"mod_list_menu\"> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__play js_play\" title=\"暂停\"> \
-                            <i class=\"list_menu__icon_play\"></i> \
-                            <span class=\"icon_txt\">暂停</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__add js_fav\"  title=\"添加到歌单\"> \
-                            <i class=\"list_menu__icon_add\"></i> \
-                            <span class=\"icon_txt\">添加到歌单</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__down js_down\" title=\"下载\"> \
-                            <i class=\"list_menu__icon_down\"></i> \
-                            <span class=\"icon_txt\">下载</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__share js_share\"  title=\"分享\"> \
-                            <i class=\"list_menu__icon_share\"></i> \
-                            <span class=\"icon_txt\">分享</span> \
-                        </a> \
-                    </div> \
-                </div> \
-                <div class=\"songlist__artist\" title=\"Bilge Theall\"> \
-                    <a href=\"#\" title=\"Bilge Theall\" class=\"singer_name\">Bilge Theall</a> \
-                </div> \
-                <div class=\"songlist__time\">00:00</div> \
-                <div class=\"songlist__other\"> \
-                </div> \
-                <a href=\"javascript:;\" class=\"songlist__delete js_delete\" title=\"删除\"> \
-                    <span class=\"icon_txt\">删除</span></a> \
-                    <i class=\"player_songlist__line\"></i> \
-                </div> \
-            </li>";
-        var _index = 1;
-        song_box.empty();
-        for(var key in resultMap) {
-            _el = $(tpl);
-            song_name_el = _el.find(".songlist__songname_txt");
-            song_name_el.attr("title", key);
-            song_name_el.attr("src", resultMap[key]);
-            song_name_el.text(key);
-            url[_index]=resultMap[key];
-            name[_index]=key;
-            _el.find(".songlist__number").html(_index+"");
-            song_box.append(_el);
-            _index++;
-        }
+        return items;
     }
     
-    //保存歌曲列表
-    function saveSongs(){
-        var jihe={};
-        if(url.length!=0){
-            for(var i in url){
-                jihe[name[i]]=url[i];
-            }
-            storage.setItem("jihe",JSON.stringify(jihe));
-        }
-    }
-
     // 保存歌曲
     function save(){
-        var jihe={};
-        if(storage.getItem("jihe")!=null){    
-        var url_a=[],name_a=[];
-        var index_=1;
-        for(key in resultMap){
-            url_a[index_]=resultMap[key];
-            name_a[index_]=key;
-            index_++;
-        }
-        if(url_a.length!=url.length){
-            storage.removeItem("jihe");
-            for(var i in name){
-                jihe[name[i]]=url[i];
-            }
-            storage.setItem("jihe",JSON.stringify(jihe));
-        }
-        }
+        song_container.save();
     }
     
     // 窗口关闭事件
@@ -412,61 +431,11 @@ $(function(){
 
     // 获取歌曲
     function fetchSongs(query_string) {
-        querySongs(query_string);
-        // Song item's play button
-        function isItemPlaying(item) {
-            return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
-        }
-        //play or pauser
-        $(".list_menu__play").click(function() {
-            var thisItem = $(this).parents("div .songlist__item");
-            // Current playing is not me
-            try{
-                if(!isItemPlaying(thisItem))
-                loadAudio(thisItem);
-            }catch(e){
-                current_play_index=$(".list_menu__play").index(this);    
-                audio_player_el.play();
-            }
-            if(audio_player_el.paused) {
-                // Play this item
-                playAudio();
-            } else {
-                pauseAudio();
-            }
-        });
-        //删除
-        $(".songlist__delete").click(function(){
-            var in_dex = $(".songlist__delete").index(this);
-            $(this).parent().parent().remove();
-            delete_update(in_dex);
-        });
-        //选中处理
-        $(".songlist__checkbox").click(function(){
-            var in_dex = $(".songlist__checkbox").index(this);
-            var check = $(this).attr("checked");
-            if(!check){    
-                if(in_dex==0){
-                    $(".songlist__checkbox").attr("checked",false);
-                }else{
-                    $(".songlist__checkbox").eq(0).attr("checked",false);
-                    $(this).attr("checked",false);
-                }
-            }else{    
-                if(in_dex==0){
-                    $(".songlist__checkbox").attr("checked",true);
-                }else{
-                    $(this).attr("checked",true);
-                    if($(" .songlist__edit :checked").length==$(".songlist__checkbox").length-1){
-                        $(".songlist__checkbox").eq(0).attr("checked",true);
-                    }
-                }
-            }
-        })
-        //下载
-        $(".list_menu__down").click(function(){
-            menu__down();
-        })
+        let items = querySongs(query_string);
+        
+        // 添加到container
+        for(let i=0;i<items.length;i++)
+            song_container.add(items[i]);
     }
     
     //批量选择删除
@@ -522,6 +491,7 @@ $(function(){
     
     //清空列表
     $(".js_all_deleted").click(function(){
+        song_container.clear();
         song_box.empty();
         audio_player.attr("src", null);
         btn_play.removeClass("btn_big_play--pause");
@@ -560,7 +530,7 @@ $(function(){
             return;
         
         audio_player_el.playbackRate = getPlaybackRateFromString(self.text());
-		setParameter(CFG_PLAYBACK, audio_player_el.playbackRate);
+        setParameter(CFG_PLAYBACK, audio_player_el.playbackRate);
     });
     $(".txp_popup_definition").mouseleave(function() {
         $(this).hide();
@@ -653,10 +623,9 @@ $(function(){
         e.preventDefault();
         var _s = $("#search-sug-input").val();
         fetchSongs("*" + _s + "*.mp3");
-        saveSongs();    
     });
     
-	// 从local storage加载设置
+    // 从local storage加载设置
     function loadConfig() {
         var DEFAULT_CONFIG = {};
         DEFAULT_CONFIG[CFG_MUTED] = false;
@@ -672,7 +641,7 @@ $(function(){
         setPlayMode(config_local[CFG_PLAY_MODE]);
     }
     
-	// 读取配置参数
+    // 读取配置参数
     function getParameter(key) {
         return config_local[key];
     }
@@ -697,19 +666,160 @@ $(function(){
         storage.setItem(CFG_KEY,JSON.stringify(config_local));
     }
     
+    // 循环滚动标题
+    function scrollTitle() {
+        var _temp_str = getPlayingSongTitle() + "...正在播放 ";
+        title_scroll_index = title_scroll_index + 1;
+        if(title_scroll_index >= _temp_str.length)
+            title_scroll_index = 0;
+        _temp_str = _temp_str.substr(title_scroll_index, _temp_str.length-1) + _temp_str.substr(0, title_scroll_index);
+        title.text(_temp_str);
+    }
+    
+    // Song item's play button
+    function isItemPlaying(item) {
+        return current_playing_item==item || (current_playing_item.length==item.length && item.length==1 && current_playing_item[0]==item[0]);
+    }
+    
+    //play or pauser
+    function onSongItemPlayButtonClicked() {
+        var thisItem = $(this).parents("div .songlist__item");
+        // Current playing is not me
+        try {
+            if(!isItemPlaying(thisItem))
+                loadAudio(thisItem);
+        } catch(e) {
+            current_play_index=$(".list_menu__play").index(this);    
+            audio_player_el.play();
+        }
+        if(audio_player_el.paused) {
+            // Play this item
+            playAudio();
+        } else {
+            pauseAudio();
+        }
+    }
+    
+    //删除
+    function onSongItemDeleteButtonClicked() {
+        var in_dex = $(this).index(this);
+        $(this).parent().parent().remove();
+        delete_update(in_dex);
+    }
+    
+    //选中处理
+    function onSongItemCheckButtonClicked() {
+        var in_dex = $(this).index(this);
+        var check = $(this).attr("checked");
+        if(!check){    
+            if(in_dex==0){
+                $(this).attr("checked",false);
+            }else{
+                $(this).eq(0).attr("checked",false);
+                $(this).attr("checked",false);
+            }
+        } else {    
+            if(in_dex==0){
+                $(this).attr("checked",true);
+            }else{
+                $(this).attr("checked",true);
+                if($(" .songlist__edit :checked").length==$(".songlist__checkbox").length-1){
+                    $(this).eq(0).attr("checked",true);
+                }
+            }
+        }
+    }
+
+    //下载
+    function onSongItemDownloadButtonClicked() {
+        menu__down();
+    }
+    
+    function onSongItemAdded(items, indexList) {
+        let tpl = "\
+            <li> \
+                <div class=\"songlist__item\"> \
+                <div class=\"songlist__edit sprite\"> \
+                    <input type=\"checkbox\" class=\"songlist__checkbox\"> \
+                </div> \
+                <div class=\"songlist__number\">1</div> \
+                <div class=\"songlist__songname\"> \
+                    <span class=\"songlist__songname_txt\" title=\"Onimusha 3 Opening\">Onimusha 3 Opening</span> \
+                    <div class=\"mod_list_menu\"> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__play js_play\" title=\"暂停\"> \
+                            <i class=\"list_menu__icon_play\"></i> \
+                            <span class=\"icon_txt\">暂停</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__add js_fav\"  title=\"添加到歌单\"> \
+                            <i class=\"list_menu__icon_add\"></i> \
+                            <span class=\"icon_txt\">添加到歌单</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__down js_down\" title=\"下载\"> \
+                            <i class=\"list_menu__icon_down\"></i> \
+                            <span class=\"icon_txt\">下载</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__share js_share\"  title=\"分享\"> \
+                            <i class=\"list_menu__icon_share\"></i> \
+                            <span class=\"icon_txt\">分享</span> \
+                        </a> \
+                    </div> \
+                </div> \
+                <div class=\"songlist__artist\" title=\"Bilge Theall\"> \
+                    <a href=\"#\" title=\"Bilge Theall\" class=\"singer_name\">Bilge Theall</a> \
+                </div> \
+                <div class=\"songlist__time\">00:00</div> \
+                <div class=\"songlist__other\"> \
+                </div> \
+                <a href=\"javascript:;\" class=\"songlist__delete js_delete\" title=\"删除\"> \
+                    <span class=\"icon_txt\">删除</span></a> \
+                    <i class=\"player_songlist__line\"></i> \
+                </div> \
+            </li>";
+        let _index = 1;
+        for(let i=0;i<items.length;i++) {
+            let item = items[i];
+            let _el = $(tpl);
+            let song_name_el = _el.find(".songlist__songname_txt");
+            song_name_el.attr("title", item.name);
+            song_name_el.attr("src", item.src);
+            song_name_el.text(item.name);
+            _el.find(".songlist__number").html(_index+"");
+            
+            // 事件绑定
+            // 播放按钮
+            _el.find(".list_menu__play").click(onSongItemPlayButtonClicked);
+            // 删除按钮
+            _el.find(".songlist__delete").click(onSongItemRemoved);
+            // 选中按钮
+            _el.find(".songlist__checkbox").click(onSongItemCheckButtonClicked);
+            // 下载按钮
+            _el.find(".list_menu__down").click(onSongItemDownloadButtonClicked);
+            
+            song_box.append(_el);
+            song_item_map[item] = _el;
+            _index++;
+        }
+    }
+    
+    // item删除事件通知，items：item列表, indexList: 索引列表
+    function onSongItemRemoved(items, indexList) {
+        // 根据items或者indexList找相应的html元素，然后删除
+    }
+    
     function start() {
         loadConfig();
         
         setIcon('favicon.ico');// 设置应用图标
-        setInterval(save,100000);
-		setInterval(function() {
-	        var _temp_str = getPlayingSongTitle() + "...正在播放 ";
-	        title_scroll_index = title_scroll_index + 1;
-	        if(title_scroll_index >= _temp_str.length)
-	            title_scroll_index = 0;
-	        _temp_str = _temp_str.substr(title_scroll_index, _temp_str.length-1) + _temp_str.substr(0, title_scroll_index);
-	        title.text(_temp_str);
-	    }, 1000);
+        
+        // 绑定事件
+        song_container.onItemAdded = onSongItemAdded;
+        song_container.onItemRemoved = onSongItemRemoved;
+        
+        // 加载音频
+        song_container.load();
+        
+        setInterval(save, 100000);
+        setInterval(scrollTitle, 1000);
         btn_play.click();
     }
     
