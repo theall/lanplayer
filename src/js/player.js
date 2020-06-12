@@ -741,18 +741,14 @@ $(function(){
     
     // 搜索
     $("#search_songs").submit(function(e) {
-        current_play_index = 0;
-        storage.removeItem("index");
-        storage.setItem("index",JSON.stringify(current_play_index));
-        storage.removeItem("jihe");
         e.preventDefault();
         var _s = $("#search-sug-input").val();
         _s = _s.trimLeft();
         if(_s.startsWith('\\')) {
             // 搜索专辑
-            _s = '*.mp3 ' + _s;
+            _s = '*.mp3 "' + _s + '"';
         } else {
-            _s = "*" + _s + "*.mp3";
+            _s = '"*' + _s + '*.mp3"';
         }
         fetchSongs(_s);
     });
