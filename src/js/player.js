@@ -43,12 +43,12 @@ $(function(){
     var Pd=false;
     var song_container = new SongContainer();
     var song_item_map = {}; // 音乐item与显示item映射
+    var song_item_ui_map = {}; // 显示item与音乐item映射
     
     function SongItem(name, src) {
         let typeName = typeof(name);
         if(typeName == 'string') {
             this.checked = false;
-            this.playing = false;
             this.singer = '';
             this.duration = 0;
             this.name = name;
@@ -57,6 +57,15 @@ $(function(){
             for(prop in name)
                 this[prop] = name[prop];
         }
+    }
+    
+    SongItem.prototype.setChecked = function(checked) {
+        if(this.checked == checked)
+            return;
+        
+        this.checked = checked;
+        if(this.onCheckChanged)
+            this.onCheckChanged(this, checked);
     }
     
     function SongContainer() {
@@ -99,6 +108,7 @@ $(function(){
             this.items.splice(index, 0, item);
         }
         this.dirty = true;
+        this.onCheckChanged = this.onItemCheckChanged;
         
         if(this.onItemAdded != undefined) {
             this.onItemAdded([item], [index]);
@@ -133,8 +143,121 @@ $(function(){
     }
     
     SongContainer.prototype.clear = function() {
-        for(let i=0;i<this.items.length;i++)
+        for(let i=this.items.length-1;i>=0;i--)
             this.remove(i);
+    }
+    
+    SongContainer.prototype.removeSelectedItems = function() {
+        for(let i=this.items.length-1;i>=0;i--) {
+            if(!this.items[i].checked)
+                continue;
+            
+            this.remove(i);
+        }
+    }
+    
+    // 音乐条目界面类
+    function SongItemUI(item) {
+        let tpl = "\
+            <li> \
+                <div class=\"songlist__item\"> \
+                <div class=\"songlist__edit sprite\"> \
+                    <input type=\"checkbox\" class=\"songlist__checkbox\"> \
+                </div> \
+                <div class=\"songlist__number\">1</div> \
+                <div class=\"songlist__songname\"> \
+                    <span class=\"songlist__songname_txt\" title=\"Onimusha 3 Opening\">Onimusha 3 Opening</span> \
+                    <div class=\"mod_list_menu\"> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__play js_play\" title=\"暂停\"> \
+                            <i class=\"list_menu__icon_play\"></i> \
+                            <span class=\"icon_txt\">暂停</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__add js_fav\"  title=\"添加到歌单\"> \
+                            <i class=\"list_menu__icon_add\"></i> \
+                            <span class=\"icon_txt\">添加到歌单</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__down js_down\" title=\"下载\"> \
+                            <i class=\"list_menu__icon_down\"></i> \
+                            <span class=\"icon_txt\">下载</span> \
+                        </a> \
+                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__share js_share\"  title=\"分享\"> \
+                            <i class=\"list_menu__icon_share\"></i> \
+                            <span class=\"icon_txt\">分享</span> \
+                        </a> \
+                    </div> \
+                </div> \
+                <div class=\"songlist__artist\" title=\"Bilge Theall\"> \
+                    <a href=\"#\" title=\"Bilge Theall\" class=\"singer_name\">Bilge Theall</a> \
+                </div> \
+                <div class=\"songlist__time\">00:00</div> \
+                <div class=\"songlist__other\"> \
+                </div> \
+                <a href=\"javascript:;\" class=\"songlist__delete js_delete\" title=\"删除\"> \
+                    <span class=\"icon_txt\">删除</span></a> \
+                    <i class=\"player_songlist__line\"></i> \
+                </div> \
+            </li>";
+        this.jqSelf = $(tpl);
+        this.jqName = this.jqSelf.find(".songlist__songname_txt");
+        this.jqNumber = this.jqSelf.find(".songlist__number");
+        this.jqBtnPlay = this.jqSelf.find(".list_menu__play");
+        this.jqBtnDelete = this.jqSelf.find(".songlist__delete");
+        this.jqCheckBox = this.jqSelf.find(".songlist__checkbox");
+        this.jqBtnDownload = this.jqSelf.find(".list_menu__down");
+        
+        if(item != undefined) {
+            this.setTitle(item.name);
+            this.setSrc(item.src);
+        }
+    }
+    
+    SongItemUI.prototype.setChecked = function(checked) {
+        const checkStr = 'checked';
+        if(checked)
+            this.jqCheckBox.attr(checkStr, checkStr);
+        else
+            this.jqCheckBox.removeAttr(checkStr);
+    }
+    
+    SongItemUI.prototype.setPlaying = function(show) {
+        const cls = 'songlist__item--playing';
+        if(show)
+            this.jqSelf.addClass(cls);
+        else
+            this.jqSelf.removeClass(cls);
+    }
+    
+    SongItemUI.prototype.setTitle = function(title) {
+        this.jqName.attr('title', title);
+        this.jqName.text(title);
+    }
+    
+    SongItemUI.prototype.setSrc = function(src) {
+        this.jqName.attr('src', src);
+    }
+    
+    SongItemUI.prototype.setNumber = function(number) {
+        this.jqNumber.text(number);
+    }
+    
+    SongItemUI.prototype.bindPlayClicked = function(func) {
+        this.jqBtnPlay.click(func);
+    }
+    
+    SongItemUI.prototype.bindDeleteClicked = function(func) {
+        this.jqBtnDelete.click(func);
+    }
+    
+    SongItemUI.prototype.bindCheckBoxClicked = function(func) {
+        this.jqCheckBox.click(func);
+    }
+    
+    SongItemUI.prototype.bindDownloadClicked = function(func) {
+        this.jqBtnDownload.click(func);
+    }
+    
+    SongItemUI.prototype.getJqObject = function() {
+        return this.jqSelf;
     }
     
     // 设置图标
@@ -366,9 +489,9 @@ $(function(){
     }
     
     // 窗口关闭事件
-    window.onbeforeunload=function(){
-       save();
-       saveConfig();
+    window.onbeforeunload = function() {
+        save();
+        saveConfig();
     }
        
     // Muted button
@@ -440,6 +563,8 @@ $(function(){
     
     //批量选择删除
     $(".js_all_delete").click(function(){
+        song_container.removeSelectedItems();
+        
         var delet_jilu=[];
         var checked=$(" .songlist__edit :checked");
         if($(".songlist__checkbox").eq(0).prop("checked")==true){
@@ -496,7 +621,7 @@ $(function(){
         audio_player.attr("src", null);
         btn_play.removeClass("btn_big_play--pause");
         song_title.text("暂无歌曲");
-        song_title.attr("title", "");    
+        song_title.attr("title", "");
         $(".js_singer").text("");
         current_progress_bar.css("width","0px");
         time_duration.html("00:00 / 00:00");
@@ -622,7 +747,14 @@ $(function(){
         storage.removeItem("jihe");
         e.preventDefault();
         var _s = $("#search-sug-input").val();
-        fetchSongs("*" + _s + "*.mp3");
+        _s = _s.trimLeft();
+        if(_s.startsWith('\\')) {
+            // 搜索专辑
+            _s = '*.mp3 ' + _s;
+        } else {
+            _s = "*" + _s + "*.mp3";
+        }
+        fetchSongs(_s);
     });
     
     // 从local storage加载设置
@@ -706,29 +838,6 @@ $(function(){
         $(this).parent().parent().remove();
         delete_update(in_dex);
     }
-    
-    //选中处理
-    function onSongItemCheckButtonClicked() {
-        var in_dex = $(this).index(this);
-        var check = $(this).attr("checked");
-        if(!check){    
-            if(in_dex==0){
-                $(this).attr("checked",false);
-            }else{
-                $(this).eq(0).attr("checked",false);
-                $(this).attr("checked",false);
-            }
-        } else {    
-            if(in_dex==0){
-                $(this).attr("checked",true);
-            }else{
-                $(this).attr("checked",true);
-                if($(" .songlist__edit :checked").length==$(".songlist__checkbox").length-1){
-                    $(this).eq(0).attr("checked",true);
-                }
-            }
-        }
-    }
 
     //下载
     function onSongItemDownloadButtonClicked() {
@@ -736,74 +845,45 @@ $(function(){
     }
     
     function onSongItemAdded(items, indexList) {
-        let tpl = "\
-            <li> \
-                <div class=\"songlist__item\"> \
-                <div class=\"songlist__edit sprite\"> \
-                    <input type=\"checkbox\" class=\"songlist__checkbox\"> \
-                </div> \
-                <div class=\"songlist__number\">1</div> \
-                <div class=\"songlist__songname\"> \
-                    <span class=\"songlist__songname_txt\" title=\"Onimusha 3 Opening\">Onimusha 3 Opening</span> \
-                    <div class=\"mod_list_menu\"> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__play js_play\" title=\"暂停\"> \
-                            <i class=\"list_menu__icon_play\"></i> \
-                            <span class=\"icon_txt\">暂停</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__add js_fav\"  title=\"添加到歌单\"> \
-                            <i class=\"list_menu__icon_add\"></i> \
-                            <span class=\"icon_txt\">添加到歌单</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__down js_down\" title=\"下载\"> \
-                            <i class=\"list_menu__icon_down\"></i> \
-                            <span class=\"icon_txt\">下载</span> \
-                        </a> \
-                        <a href=\"javascript:;\" class=\"list_menu__item list_menu__share js_share\"  title=\"分享\"> \
-                            <i class=\"list_menu__icon_share\"></i> \
-                            <span class=\"icon_txt\">分享</span> \
-                        </a> \
-                    </div> \
-                </div> \
-                <div class=\"songlist__artist\" title=\"Bilge Theall\"> \
-                    <a href=\"#\" title=\"Bilge Theall\" class=\"singer_name\">Bilge Theall</a> \
-                </div> \
-                <div class=\"songlist__time\">00:00</div> \
-                <div class=\"songlist__other\"> \
-                </div> \
-                <a href=\"javascript:;\" class=\"songlist__delete js_delete\" title=\"删除\"> \
-                    <span class=\"icon_txt\">删除</span></a> \
-                    <i class=\"player_songlist__line\"></i> \
-                </div> \
-            </li>";
-        let _index = 1;
         for(let i=0;i<items.length;i++) {
             let item = items[i];
-            let _el = $(tpl);
-            let song_name_el = _el.find(".songlist__songname_txt");
-            song_name_el.attr("title", item.name);
-            song_name_el.attr("src", item.src);
-            song_name_el.text(item.name);
-            _el.find(".songlist__number").html(_index+"");
+            let itemUI = new SongItemUI(item);
             
             // 事件绑定
             // 播放按钮
-            _el.find(".list_menu__play").click(onSongItemPlayButtonClicked);
-            // 删除按钮
-            _el.find(".songlist__delete").click(onSongItemRemoved);
-            // 选中按钮
-            _el.find(".songlist__checkbox").click(onSongItemCheckButtonClicked);
-            // 下载按钮
-            _el.find(".list_menu__down").click(onSongItemDownloadButtonClicked);
+            itemUI.bindPlayClicked(onSongItemPlayButtonClicked);
             
-            song_box.append(_el);
-            song_item_map[item] = _el;
-            _index++;
+            // 删除按钮
+            itemUI.bindDeleteClicked(onSongItemRemoved);
+            
+            // 选中按钮
+            itemUI.bindCheckBoxClicked(onSongItemCheckButtonClicked);
+            
+            // 下载按钮
+            itemUI.bindDownloadClicked(onSongItemDownloadButtonClicked);
+            
+            song_box.append(itemUI.getJqObject());
+            song_item_map[item] = itemUI;
+            song_item_ui_map[itemUI] = item;
         }
     }
     
     // item删除事件通知，items：item列表, indexList: 索引列表
     function onSongItemRemoved(items, indexList) {
         // 根据items或者indexList找相应的html元素，然后删除
+    }
+    
+    // item界面选中事件
+    function onSongItemCheckButtonClicked() {
+        let jq = $(this);
+        const checked_str = 'checked';
+        let checked = jq.attr(checked_str)==checked_str?true:false;
+        song_item_ui_map[jq].setChecked(checked);
+    }
+    
+    // item选中状态改变
+    function onItemCheckChanged(item, checked) {
+        song_item_map[item].setChecked(checked);
     }
     
     function start() {
@@ -814,6 +894,7 @@ $(function(){
         // 绑定事件
         song_container.onItemAdded = onSongItemAdded;
         song_container.onItemRemoved = onSongItemRemoved;
+        song_container.onItemCheckChanged = onItemCheckChanged;
         
         // 加载音频
         song_container.load();
