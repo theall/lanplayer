@@ -42,8 +42,8 @@ $(function(){
     var volume_progress = $("#spanvolumebar");//volume bar
     var Pd=false;
     var song_container = new SongContainer();
-    var song_item_map = {}; // 音乐item与显示item映射
-    var song_item_ui_map = {}; // 显示item与音乐item映射
+    var song_item_map = new Map(); // 音乐item与显示item映射
+    var song_item_ui_map = new Map(); // 显示item与音乐item映射
     
     function SongItem(name, src) {
         let typeName = typeof(name);
@@ -830,20 +830,23 @@ $(function(){
     
     //删除
     function onSongItemDeleteButtonClicked() {
-        var in_dex = $(this).index(this);
-        $(this).parent().parent().remove();
-        delete_update(in_dex);
+        let _index = $(this).parents('li').index();
+        song_container.remove(_index);
+        delete_update(_index);
     }
 
     //下载
     function onSongItemDownloadButtonClicked() {
-        menu__down();
+        let _index = $(this).parents('li').index();
+        let item = song_container.getItem(_index);
+        window.location = item.src;
     }
     
     function onSongItemAdded(items, indexList) {
         for(let i=0;i<items.length;i++) {
             let item = items[i];
             let itemUI = new SongItemUI(item);
+            itemUI.setNumber(indexList[i]+1);
             
             // 事件绑定
             // 播放按钮
@@ -858,9 +861,10 @@ $(function(){
             // 下载按钮
             itemUI.bindDownloadClicked(onSongItemDownloadButtonClicked);
             
-            song_box.append(itemUI.getJqObject());
-            song_item_map[item] = itemUI;
-            song_item_ui_map[itemUI] = item;
+            let jqItemUI = itemUI.getJqObject();
+            song_box.append(jqItemUI);
+            song_item_map.set(item, itemUI);
+            song_item_ui_map.set(jqItemUI.get(0), item);// 存储html元素
         }
     }
     
