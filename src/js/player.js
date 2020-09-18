@@ -854,6 +854,10 @@ $(function(){
     // item删除事件通知，items：item列表, indexList: 索引列表
     function onSongItemRemoved(items, indexList) {
         // 根据items或者indexList找相应的html元素，然后删除
+        for(let i=indexList.length-1;i>=0;i--) {
+            song_box.children().eq(indexList[i]).remove();
+            song_item_ui_list.splice(indexList[i], 1);
+        }
     }
     
     // item界面选中事件
