@@ -42,8 +42,7 @@ $(function(){
     var btnVoice = $(".btn_big_voice");
     var volume_progress = $("#spanvolumebar");//volume bar
     var song_container = new SongContainer();
-    var song_item_map = new Map(); // 音乐item与显示item映射
-    var song_item_ui_map = new Map(); // 显示item与音乐item映射
+    var song_item_ui_list = [];
     
     function SongItem(name, src) {
         let typeName = typeof(name);
@@ -108,7 +107,7 @@ $(function(){
             this.items.splice(index, 0, item);
         }
         this.dirty = true;
-        this.onCheckChanged = this.onItemCheckChanged;
+        item.onCheckChanged = this.onItemCheckChanged;
         
         if(this.onItemAdded != undefined) {
             this.onItemAdded([item], [index]);
@@ -154,6 +153,29 @@ $(function(){
             
             this.remove(i);
         }
+    }
+    
+    SongContainer.prototype.selectAll = function() {
+        for(let i=this.items.length-1;i>=0;i--) {
+            this.items[i].setChecked(true);
+        }
+    }
+    
+    SongContainer.prototype.unSelectAll = function() {
+        for(let i=this.items.length-1;i>=0;i--) {
+            this.items[i].setChecked(false);
+        }
+    }
+    
+    SongContainer.prototype.setChecked = function(index, checked) {
+        if(index<0 || index>=this.items.length)
+            return;
+        
+        this.items[index].setChecked(checked);
+    }
+    
+    SongContainer.prototype.indexOf = function(item) {
+        return this.items.indexOf(item);
     }
     
     // 音乐条目界面类
@@ -825,8 +847,7 @@ $(function(){
             
             let jqItemUI = itemUI.getJqObject();
             song_box.append(jqItemUI);
-            song_item_map.set(item, itemUI);
-            song_item_ui_map.set(jqItemUI.get(0), item);// 存储html元素
+            song_item_ui_list.push(itemUI);
         }
     }
     
@@ -837,16 +858,24 @@ $(function(){
     
     // item界面选中事件
     function onSongItemCheckButtonClicked() {
-        let jq = $(this);
-        const checked_str = 'checked';
-        let checked = jq.attr(checked_str)==checked_str?true:false;
-        song_item_ui_map[jq].setChecked(checked);
+        let index = $(this).parents("li").index();
+        song_container.setChecked(index, this.checked);
     }
     
     // item选中状态改变
     function onItemCheckChanged(item, checked) {
-        song_item_map[item].setChecked(checked);
+        let index = song_container.indexOf(item);
+        song_item_ui_list[index].setChecked(checked);
     }
+    
+    // 全选按钮
+    $(".js_check_all").click(function() {
+        if(this.checked) {
+            song_container.selectAll();
+        } else {
+            song_container.unSelectAll();
+        }
+    });
     
     function start() {
         loadConfig();
