@@ -27,6 +27,7 @@ $(function(){
     var btn_play = $("#btnplay");// 播放按钮对象
     var progress_bar_base = $("#spanplayer_bgbar");// 播放器进度条父对象
     var current_progress_bar = $("#spanplaybar");// 当前播放进度条
+    var current_download_bar = $("#downloadbar");// 当前下载进度条
     var song_title = $("#sim_song_info>a:first");// 当前播放音乐的标题对象
     var song_author = song_title.next();// 当前播放音乐的作者
     var btn_play_mode = $("#play_mod");// 播放模式按钮
@@ -40,7 +41,6 @@ $(function(){
     var name=[],url=[],resultMap;
     var btnVoice = $(".btn_big_voice");
     var volume_progress = $("#spanvolumebar");//volume bar
-    var Pd=false;
     var song_container = new SongContainer();
     var song_item_map = new Map(); // 音乐item与显示item映射
     var song_item_ui_map = new Map(); // 显示item与音乐item映射
@@ -389,7 +389,7 @@ $(function(){
         time_duration.html(secondsToTimeStr(audio_player_el.currentTime) + " / " + secondsToTimeStr(audio_player_el.duration));
         
         // 更新当前播放进度条
-        current_progress_bar.css("width", parseInt(audio_player_el.currentTime*100/audio_player_el.duration, 10)+"%");
+        current_progress_bar.css("width", audio_player_el.currentTime*100/audio_player_el.duration+"%");
     }
     
     // 处理音频播放事件
@@ -427,6 +427,12 @@ $(function(){
         pause: function() {
             btn_play.removeClass("btn_big_play--pause");
             $(".list_menu__icon_pause").attr("class", "list_menu__icon_play");
+        },
+        progress: function() {
+            if(this.buffered.length > 0) {
+                progress_width = parseInt(100 * this.buffered.end(this.buffered.length-1) / audio_player_el.duration, 10);
+                current_download_bar.css("width", progress_width+"%");
+            }
         }
     });
     
@@ -466,8 +472,18 @@ $(function(){
     
     // Playing progress bar
     $("#progress,#downloadbar,#spanplayer_bgbar").click(function(event){
-        progress_width = parseInt(100 * (event.pageX - progress_bar_base.offset().left) / progress_bar_base.width(), 10);
-        current_progress_bar.css("width", progress_width+"%");
+        let seeking_time = ((event.pageX - progress_bar_base.offset().left) / progress_bar_base.width()) * audio_player_el.duration;
+        let seekable = false;
+        for(let i=0;i<audio_player_el.seekable.length;i++) {
+            if(seeking_time>=audio_player_el.seekable.start(i) && seeking_time<=audio_player_el.seekable.end(i)) {
+                audio_player_el.currentTime = seeking_time;
+                seekable = true;
+                break;
+            }
+        }
+        if(!seekable && audio_player_el.buffered.length>0) {
+            audio_player_el.currentTime = audio_player_el.buffered.end(audio_player_el.buffered.length-1);
+        }
         return false;
     });
     
@@ -564,55 +580,7 @@ $(function(){
     //批量选择删除
     $(".js_all_delete").click(function(){
         song_container.removeSelectedItems();
-        
-        var delet_jilu=[];
-        var checked=$(" .songlist__edit :checked");
-        if($(".songlist__checkbox").eq(0).prop("checked")==true){
-            checked=$(" .songlist__edit :checked:gt(0)");
-            $(".songlist__checkbox").eq(0).attr("checked",false);
-        }
-        for(var i=1;i<$(".songlist__checkbox").length;i++){
-            if($(".songlist__checkbox").eq(i).prop("checked")==true){
-                delet_jilu.push(i);
-            }
-        }
-        var indexx = 0;
-        checked.each(function(){
-            Pd = true;
-            delete_update(delet_jilu[indexx]-(indexx+1));    
-            indexx++;
-            $(this).parent().parent().remove();
-        })
     })
-    
-    //删除后更新
-    function delete_update(index){
-        for(var i = 0;i < song_box.children("li").length+1;i++){
-            $(".songlist__number").eq(i-1).html(i+"");
-        }
-        name.splice(index+1,1);
-        url.splice(index+1,1);
-        if(current_play_index==index){
-            if(Pd==true){
-            current_play_index++;
-            Pd=false;
-            }
-            if(!audio_player_el.paused)
-                playAudio();
-            else{
-                trim=setTimeout(function(){playAudio();setTimeout(pauseAudio(),100)},400);
-                loadAudio(current_play_index);
-                pauseAudio(); 
-            }
-        }else{
-            if(current_play_index!=0&&current_play_index>index){
-                current_play_index--;
-            }
-        }
-        if($(".songlist__item").length==1){
-            $(".js_all_deleted").click();
-        }
-    }
     
     //清空列表
     $(".js_all_deleted").click(function(){
@@ -632,18 +600,13 @@ $(function(){
     
     //批量下载
     $(".js_all_down").click(function(){
-        menu__down();
+        
     })
     
     //底部下载
     $(".btn_big_down").click(function(){
-        menu__down();
+        
     })
-    
-    //下载处理
-    function menu__down(){
-        alert("下载成功");
-    }
     
     // 倍速
     function getPlaybackRateFromString(s) {
@@ -832,7 +795,6 @@ $(function(){
     function onSongItemDeleteButtonClicked() {
         let _index = $(this).parents('li').index();
         song_container.remove(_index);
-        delete_update(_index);
     }
 
     //下载
