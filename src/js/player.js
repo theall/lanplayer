@@ -100,12 +100,11 @@ $(function(){
     }
     
     SongContainer.prototype.add = function(item, index) {
-        if(index == undefined) {
+        if(index==undefined || index<0)
+            index = 0;
+        if(index > this.items.length)
             index = this.items.length;
-            this.items.push(item);
-        } else {
-            this.items.splice(index, 0, item);
-        }
+        this.items.splice(index, 0, item);
         this.dirty = true;
         item.onCheckChanged = this.onItemCheckChanged;
         
@@ -846,8 +845,12 @@ $(function(){
             itemUI.bindDownloadClicked(onSongItemDownloadButtonClicked);
             
             let jqItemUI = itemUI.getJqObject();
-            song_box.append(jqItemUI);
-            song_item_ui_list.push(itemUI);
+            let target = song_box.children().eq(indexList[i]);
+            if(target.length == 0)
+                song_box.append(jqItemUI);
+            else
+                jqItemUI.insertBefore(target);
+            song_item_ui_list.splice(indexList[i], 0, itemUI);
         }
     }
     
