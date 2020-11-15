@@ -538,6 +538,15 @@ p.popup_data_detail__tips {
     width: 36px
 }
 
+body {
+    counter-reset: songNumber;
+}
+
+.songlist__number:before {
+    counter-increment: songNumber;
+    content: counter(songNumber);
+}
+
 .songlist__songname_txt {
     float: left;
     overflow: hidden;

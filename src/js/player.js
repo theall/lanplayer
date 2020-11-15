@@ -5,7 +5,6 @@ $(function(){
     const CFG_SIMPLE_VIEW = 'simple_view';
     const CFG_PLAY_MODE = 'play_mode';
     const CFG_KEY = "config";
-    const MUSIC_KEY = 'musics';
     
     const PLAY_MODE_SINGLE = 1;// 播放模式：单个循环
     const PLAY_MODE_RECYCLE = 2;// 播放模式：列表循环
@@ -44,139 +43,6 @@ $(function(){
     var song_container = new SongContainer();
     var song_item_ui_list = [];
     
-    function SongItem(name, src) {
-        let typeName = typeof(name);
-        if(typeName == 'string') {
-            this.checked = false;
-            this.singer = '';
-            this.duration = 0;
-            this.name = name;
-            this.src = src;
-        } else if(typeName == 'object') {
-            for(prop in name)
-                this[prop] = name[prop];
-        }
-    }
-    
-    SongItem.prototype.setChecked = function(checked) {
-        if(this.checked == checked)
-            return;
-        
-        this.checked = checked;
-        if(this.onCheckChanged)
-            this.onCheckChanged(this, checked);
-    }
-    
-    function SongContainer() {
-        this.items = [];
-        this.playing = -1;
-        this.dirty = false;
-    }
-    
-    SongContainer.prototype.getPlayingIndex = function() {
-        return this.playing;
-    }
-    
-    SongContainer.prototype.setPlayingIndex = function(index) {
-        if(this.playing == index)
-            return;
-        
-        let oldIndex = this.playing;
-        this.playing = index;
-        if(this.onPlayingIndexChanged)
-            this.onPlayingIndexChanged(oldIndex, index);
-    }
-    
-    SongContainer.prototype.getPlayingItem = function() {
-        return this.items[this.playing] || null;
-    }
-    
-    SongContainer.prototype.getItem = function(index) {
-        return this.items[index] || null;
-    }
-    
-    SongContainer.prototype.getSize = function() {
-        return this.items.length;
-    }
-    
-    SongContainer.prototype.add = function(item, index) {
-        if(index==undefined || index<0)
-            index = 0;
-        if(index > this.items.length)
-            index = this.items.length;
-        this.items.splice(index, 0, item);
-        this.dirty = true;
-        item.onCheckChanged = this.onItemCheckChanged;
-        
-        if(this.onItemAdded != undefined) {
-            this.onItemAdded([item], [index]);
-        }
-    }
-    
-    SongContainer.prototype.remove = function(index) {
-        let items = this.items.splice(index, 1);
-        this.dirty = true;
-        
-        if(this.onItemRemoved != undefined) {
-            this.onItemRemoved(items, [index]);
-        }
-    }
-    
-    SongContainer.prototype.save = function() {
-        if(this.dirty) {
-            this.dirty = false;
-            window.localStorage.setItem(MUSIC_KEY, JSON.stringify(this));
-        }
-    }
-    
-    SongContainer.prototype.load = function() {
-        let default_musics = {
-            items: []
-        };
-        let musics = JSON.parse(window.localStorage.getItem(MUSIC_KEY)) || default_musics;
-        let items = musics['items']
-        for(let i=0;i<items.length;i++) {
-            this.add(new SongItem(items[i]));
-        }
-    }
-    
-    SongContainer.prototype.clear = function() {
-        for(let i=this.items.length-1;i>=0;i--)
-            this.remove(i);
-    }
-    
-    SongContainer.prototype.removeSelectedItems = function() {
-        for(let i=this.items.length-1;i>=0;i--) {
-            if(!this.items[i].checked)
-                continue;
-            
-            this.remove(i);
-        }
-    }
-    
-    SongContainer.prototype.selectAll = function() {
-        for(let i=this.items.length-1;i>=0;i--) {
-            this.items[i].setChecked(true);
-        }
-    }
-    
-    SongContainer.prototype.unSelectAll = function() {
-        for(let i=this.items.length-1;i>=0;i--) {
-            this.items[i].setChecked(false);
-        }
-    }
-    
-    SongContainer.prototype.setChecked = function(index, checked) {
-        if(index<0 || index>=this.items.length)
-            return;
-        
-        this.items[index].setChecked(checked);
-    }
-    
-    SongContainer.prototype.indexOf = function(item) {
-        return this.items.indexOf(item);
-    }
-    
     // 音乐条目界面类
     function SongItemUI(item) {
         let tpl = "\
@@ -185,7 +51,7 @@ $(function(){
                 <div class=\"songlist__edit sprite\"> \
                     <input type=\"checkbox\" class=\"songlist__checkbox\"> \
                 </div> \
-                <div class=\"songlist__number\">1</div> \
+                <div class=\"songlist__number\"></div> \
                 <div class=\"songlist__songname\"> \
                     <span class=\"songlist__songname_txt\" title=\"Onimusha 3 Opening\">Onimusha 3 Opening</span> \
                     <div class=\"mod_list_menu\"> \
@@ -530,7 +396,7 @@ $(function(){
         save();
         saveConfig();
     }
-       
+    
     // Muted button
     function mutePlayer(muted) {
         if(typeof(muted) != 'boolean')
@@ -594,7 +460,7 @@ $(function(){
         let items = querySongs(query_string);
         
         // 添加到container
-        for(let i=0;i<items.length;i++)
+        for(let i=items.length-1;i>=0;i--)
             song_container.add(items[i]);
     }
     
@@ -829,7 +695,7 @@ $(function(){
         for(let i=0;i<items.length;i++) {
             let item = items[i];
             let itemUI = new SongItemUI(item);
-            itemUI.setNumber(indexList[i]+1);
+            //itemUI.setNumber(indexList[i]+1);
             
             // 事件绑定
             // 播放按钮
